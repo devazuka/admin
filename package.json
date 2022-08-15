@@ -1,0 +1,16 @@
+{
+  "type": "module",
+  "scripts": {
+    "start": "./node_modules/.bin/esbuild script.js --bundle --format=esm --servedir=. --outdir=lib",
+    "build": "./node_modules/.bin/esbuild --bundle --format=esm --minify --analyze script.js --outfile=lib/script.js",
+    "lint": "./node_modules/.bin/prettier -w --no-semi --single-quote --trailing-comma all --arrow-parens always --prose-wrap always --print-width 80 quests/*.md"
+  },
+  "dependencies": {
+    "better-sqlite3": "^7.5.3",
+    "stripe": "^10.2.0",
+    "uws": "github:uNetworking/uWebSockets.js#v20.10.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.14.50"
+  }
+}
