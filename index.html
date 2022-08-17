@@ -90,26 +90,6 @@ body, span {
 </head>
 <body>
   <h1>Admin</h1>
-  <div id="users">
-    <h2>Users</h2>
-    <div class="data"></div>
-  </div>
-  <div id="bookings">
-    <h2>Bookings</h2>
-    <div class="data"></div>
-  </div>
-  <div id="workshops">
-    <h2>Workshops</h2>
-    <div class="data"></div>
-  </div>
-  <div id="registrations">
-    <h2>Registrations</h2>
-    <div class="data"></div>
-  </div>
-  <div id="sessions">
-    <h2>Sessions</h2>
-    <div class="data"></div>
-  </div>
   <script>
 const f2 = n => n < 10 ? ('0'+n) : n
 const columnTypeDefs = {
@@ -136,7 +116,13 @@ const prepareColumn = ([name, type], index) =>
 // TODO: add filter
 const makeFilter = q => new Function(['data', 'i', 'all'], `with (data) { return ${q} }`)
 const createTable = table => {
-  const div = document.querySelector(`#${table.name}s > .data`)
+  const wrapper = document.createElement('div')
+  const title = document.createElement('h2')
+  const div = document.createElement('div')
+  wrapper.id = table.name
+  title.append(table.name)
+  div.classList.add('data')
+  wrapper.append(title, div)
 
   const columns = Object.entries(table.columns).map(prepareColumn)
   const size = columns.length
@@ -217,6 +203,7 @@ const createTable = table => {
     ? sortedData.sort(sorts.order === 'asc' ? compareASC : compareDESC)
     : unsortedData)
   sort()
+  document.body.append(wrapper)
 }
 
 fetch('/api/all').then(r => r.json()).then(tables => {
