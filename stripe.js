@@ -1,7 +1,8 @@
 import S from 'stripe'
+import { STRIPE_SECRET, STRIPE_SIGNATURE } from './env.js'
 import { Customer, Payment } from './data.js'
-const stripe = S(process.env.STRIPE_SECRET)
-// load transactions
+
+const stripe = S(STRIPE_SECRET)
 
 const loadCustomer = data => {
   const match = Customer.find.email(data.email)
@@ -34,21 +35,19 @@ const loadAllCharges = async starting_after => {
 
 await loadAllCharges()
 
+const handleStripeWebhook = () => {
+  // TODO: update payements & customers
+  // TODO: check signature
+  // STRIPE_SIGNATURE
+}
 
 // POST /stripe
 const decode = new TextDecoder().decode.bind(new TextDecoder())
-export const POST_stripe = async ({ params, res }) => {
-  const body = await new Promise((s, f) => {
-    let acc = ''
-    res.onData((chunk, isLast) => {
-      acc += decode(chunk)
-      isLast && s(JSON.parse(acc))
-    })
+export const POST_stripe = async ({ res }) => {
+  let acc = ''
+  res.onData((chunk, isLast) => {
+    acc += decode(chunk)
+    isLast && handleStripeWebhook(JSON.parse(acc))
   })
-  // console.log(body)
-  // console.log('yooo')
 }
-
-
-
 

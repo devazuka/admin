@@ -108,7 +108,7 @@ const ID = Symbol('ID')
 const UPDATED_AT = Symbol('UPDATED_AT')
 const CREATED_AT = Symbol('CREATED_AT')
 const byId = Object.create(null)
-const definitions = new Set()
+const definitions = new Map()
 const getById = id => byId[id]
 const getFormater = valueType => {
   if (definitions.has(valueType)) return value => value[ID]
@@ -136,10 +136,12 @@ export const defineEntity = (name, defs) => {
   const keys = []
   const parser = Object.create(null)
   const formatter = Object.create(null)
-  for (const [name, valueType] of Object.entries(defs)) {
-    keys.push(name)
-    parser[name] = getParser(valueType)
-    formatter[name] = getFormater(valueType)
+  const defsData = {}
+  for (const [key, valueType] of Object.entries(defs)) {
+    keys.push(key)
+    parser[key] = getParser(valueType)
+    formatter[key] = getFormater(valueType)
+    defsData[key] = definitions.get(valueType) || valueType.name
   }
 
   const entities = []
@@ -162,6 +164,18 @@ export const defineEntity = (name, defs) => {
       get updatedAt() {
         return getUpdatedAt(this)
       }
+      toJSON() {
+        const result = {
+          updatedAt: this[UPDATED_AT],
+          createdAt: this[CREATED_AT],
+        }
+        for (const key of keys) {
+          const value = this[key]
+          if (value == null) continue
+          result[key] = formatter[key](value)
+        }
+        return result
+      }
     },
   }
 
@@ -177,7 +191,6 @@ export const defineEntity = (name, defs) => {
       if (!f) continue // ignore values not defined
       v === e[k] || changes.push({ k, v: f(v) })
     }
-    console.log({ changes, values })
     if (!changes.length) return e
     const t = performance.now() + start
     insertTransaction(t, reason)
@@ -248,9 +261,11 @@ export const defineEntity = (name, defs) => {
     create.past[key] = () => allAtomsForAttr(name, key)
   }
 
-  definitions.add(create)
+  definitions.set(create, name)
 
   create.entities = entities
+
+  create.toJSON = () => ({ definitions: defsData, values: entities })
 
   return create
 }

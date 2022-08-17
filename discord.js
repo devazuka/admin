@@ -32,6 +32,7 @@ const discord = method => async (path, { user, ...opts } = {}) => {
   if (user) {
     if (user.expireAt > Date.now()) {
       // TODO: refresh OAuth
+      throw new R('oauth exipred', UNAUTHORIZED)
     }
     headers.authorization = `Bearer ${user.token}`
   } else if (!headers.authorization) {
@@ -52,11 +53,12 @@ const discord = method => async (path, { user, ...opts } = {}) => {
 
 METHODS.forEach(method => discord[method] = discord(method))
 
-const getOrCreateUser = async code => {
+const getOrCreateUser = async (code, signal) => {
   // authResponse return `expire_in` but it's a relative value
   // Saving the date of the request to convert to an absolute value
   const now = Date.now()
   const auth = await discord.POST('oauth2/token', {
+    signal,
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       scope: 'identify',
@@ -72,6 +74,7 @@ const getOrCreateUser = async code => {
   const expireAt = auth.expire_in * 1000 + now
 
   const { id, username, discriminator } = await discord.GET('users/@me', {
+    signal,
     headers: { authorization: `Bearer ${token}` },
   })
 
@@ -86,7 +89,7 @@ const getOrCreateUser = async code => {
 }
 
 // GET /auth/discord
-export const GET_auth_discord = async ({ params }) => {
+export const GET_auth_discord = async ({ params, signal }) => {
   // Link open when redirected from discord OAuth
   const code = params.get('code')
   const state = params.get('state')
@@ -97,7 +100,7 @@ export const GET_auth_discord = async ({ params }) => {
   if (!oauthStates.has(state)) return new R('Bad State', UNAUTHORIZED)
 
   // If it's the first time we have to create the user
-  const { login, session, level } = await getOrCreateUser(code)
+  const { login, session, level } = await getOrCreateUser(code, signal)
 
   // Redirect to the connected app while setting the secure auth cookie
   return new R(null, {

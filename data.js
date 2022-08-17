@@ -15,16 +15,34 @@ export const User = defineEntity('user', {
 })
 
 export const Customer = defineEntity('customer', {
-  fullname: String,
-  email: String,
-  tax: String, // -> nif details
+  croissant: String, // id form croissant
+  fullname: String, // from stripe & croissant
+  image: String, // from croissant
+  email: String, // from stripe
+  tax: String, // from stripe nif details
+})
+
+export const Visit = defineEntity('visit', {
+  id: String,
+  at: Date,
+  by: Customer,
+  end: Date,
+  guest: String, // name of the guest
+})
+
+export const Product = defineEntity('product', {
+  id: String, // 'drink' || 'day_pass' || 'month_pass'
+  cost: Number, // in cents
+  // availability ?
+  // description ?
 })
 
 export const Payment = defineEntity('payment', {
-  id: String,
+  id: String, // stripe id
   by: Customer,
   at: Date,
   type: String, // 'stripe' || 'cash',
+  product: Product,
   amount: Number, // in cents
   disputed: Boolean,
   refunded: Boolean,
@@ -34,6 +52,5 @@ export const Payment = defineEntity('payment', {
 export const Pass = defineEntity('pass', {
   at: Date,
   end: Date,
-  type: String, // 'day' | 'week' | 'month'
   source: Payment,
 })
