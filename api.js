@@ -1,4 +1,5 @@
 import { Customer, Visit, Payment, Product, Pass } from "./data.js"
+import { R } from './response.js'
 
 // GET /api/all
 export const GET_api_all = async ({ params, session }) =>
