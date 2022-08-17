@@ -106,7 +106,7 @@ const server = uWS.App()
   },
 })
 .post('/stripe', handle(POST_stripe))
-.post('/api/all', handle(GET_api_all))
+.get('/api/all', handle(GET_api_all))
 .get('/auth/discord', handle(GET_auth_discord))
 .get('/link/discord', handle(GET_link_discord))
 .get('/logout', handle(GET_logout))
