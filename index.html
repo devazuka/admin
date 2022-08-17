@@ -54,18 +54,18 @@ body, span {
     #000;
 }
 
-.data > span.bool:after { content: '❌' }
-.data > span.bool[data-val='true']:after { content: '✔' }
-.data > span.bool.sex:after { content: '⚧️' }
-.data > span.bool.sex[data-val='true']:after { content: '♂️' }
-.data > span.bool.sex[data-val='false']:after { content: '♀️' }
+.data > span.Boolean:after { content: '❌' }
+.data > span.Boolean[data-val='true']:after { content: '✔' }
+.data > span.Boolean.sex:after { content: '⚧️' }
+.data > span.Boolean.sex[data-val='true']:after { content: '♂️' }
+.data > span.Boolean.sex[data-val='false']:after { content: '♀️' }
 
 .data > span, .data > b {
   padding: 8px 4px;
   white-space: nowrap;
   text-align: center;
 }
-.data > span.date, .data > b.sex {
+.data > span.Date, .data > b.sex {
   font-stretch: 75%;
 }
 .data > span {
@@ -113,7 +113,7 @@ body, span {
   <script>
 const f2 = n => n < 10 ? ('0'+n) : n
 const columnTypeDefs = {
-  date: {
+  Date: {
     format: ts => {
       const d = new Date(ts)
       const time = f2(d.getHours()) +':'+ f2(d.getMinutes()) +':'+ f2(d.getSeconds())
@@ -122,13 +122,16 @@ const columnTypeDefs = {
     },
     width: '9em',
   },
-  text: { format: s => s ?? '-',  width: 'min-content' },
-  num: { format: String,  width: 'min-content' },
-  bool: { format: () => '', width: '2em' },
+  String: { format: s => s ?? '-',  width: 'min-content' },
+  Number: { format: String,  width: 'min-content' },
+  Boolean: { format: v => '', width: '2em' },
+  JSON: { format: JSON.stringify },
 }
 
+const ref = { format: (v, type) => `${type}(${v})` }
+
 const prepareColumn = ([name, type], index) =>
-  ({ ...columnTypeDefs[type], name, type, index })
+  ({ ...(columnTypeDefs[type]||ref), name, type, index })
 
 // TODO: add filter
 const makeFilter = q => new Function(['data', 'i', 'all'], `with (data) { return ${q} }`)
@@ -216,41 +219,16 @@ const createTable = table => {
   sort()
 }
 
-createTable({
-  name: 'user',
-  columns: { at: 'date', mail: 'text', name: 'text', tel: 'text', birth: 'date', sex: 'bool', ref: 'text', work: 'text' },
-  data: [
-    [Date.now() - Math.random()*9e11, 'clement@devazuka.com',     'Clement Denis',   '+33605625747', Date.now() - Math.random()*9e11,  true, 'Friend',    'Dev'],
-    [Date.now() - Math.random()*9e11,   'aline@devazuka.com', 'Aline Paschoalino', '00351968875135', Date.now() - Math.random()*9e11, false, 'Friend',    'Manager'],
-    [Date.now() - Math.random()*9e11, 'marcos2ouf@gmail.com',            'Marcos',             null, Date.now() - Math.random()*9e11,  null, 'Instagram', 'Dev'],
-    [Date.now() - Math.random()*9e11,  'le.mikmac@gmail.com',      'Jean Jacotot',   '+33624075567', Date.now() - Math.random()*9e11,  true, 'Friend',    'Dev'],
-  ]
+fetch('/api/all').then(r => r.json()).then(tables => {
+  for (const [name, { definitions, values }] of Object.entries(table)) {
+    createTable({
+      name,
+      columns: definitions,
+      data: values,
+    })
+  }
 })
 
-/*
-// Connect to server
-const { connect } import './server-client.js'
-
-const { session } = localStorage
-if (!session) {
-  document.body.innerHTML = 'missing session <a href="..">sign in first</a>'
-}
-
-// Load the data
-const allData = await (await fetch('/api/all-data.json', {
-  headers: { Authorization: `token ${session}` }
-})).json()
-
-
-// Show the data
-for (const tableDef of allData) {
-  createTable(tableDef)
-}
-
-// TODO: Synchronise the data
-// const api = await connect(session)
-
-*/
   </script>
 </body>
 </html>

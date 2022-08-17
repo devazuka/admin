@@ -146,6 +146,10 @@ export const defineEntity = (name, defs) => {
 
   const entities = []
   const className = cap(name)
+  function getJSONValue(key) {
+    const value = this[key]
+    return value == null ? null : formatter[key](value)
+  }
   const { [className]: Entity } = {
     [className]: class {
       constructor(id, createdAt) {
@@ -165,15 +169,12 @@ export const defineEntity = (name, defs) => {
         return getUpdatedAt(this)
       }
       toJSON() {
-        const result = {
-          updatedAt: this[UPDATED_AT],
-          createdAt: this[CREATED_AT],
-        }
+        const result = [this[ID]]
         for (const key of keys) {
           const value = this[key]
-          if (value == null) continue
-          result[key] = formatter[key](value)
+          result.push(value == null ? null : formatter[key](value))
         }
+        result.push(this[CREATED_AT], this[UPDATED_AT])
         return result
       }
     },
@@ -271,7 +272,15 @@ export const defineEntity = (name, defs) => {
 
   create.entities = entities
 
-  create.toJSON = () => ({ definitions: defsData, values: entities })
+  create.toJSON = () => ({
+    values: entities,
+    definitions: {
+      entity: 'Number',
+      ...defsData,
+      createdAt: 'Date',
+      updatedAt: 'Date',
+    },
+  })
 
   return create
 }
