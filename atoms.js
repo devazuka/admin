@@ -228,6 +228,11 @@ export const defineEntity = (name, defs) => {
     }
   }
 
+  create.findOrCreate = (fn, args, data) => {
+    const match = create.find(fn, args)
+    return match ? match.update(data) : create(data)
+  }
+
   create.filter = (fn, args) => {
     const results = []
     for (const entity of entities) {
@@ -256,6 +261,7 @@ export const defineEntity = (name, defs) => {
     const finder = (entity, value) => entity[key] === value
     create.find[key] = create.find.bind(null, finder)
     create.filter[key] = create.filter.bind(null, finder)
+    create.findOrCreate[key] = create.findOrCreate.bind(null, finder)
     create.atomFind[key] = create.atomFind.bind(null, key)
     create.atomFilter[key] = create.atomFilter.bind(null, key)
     create.past[key] = () => allAtomsForAttr(name, key)

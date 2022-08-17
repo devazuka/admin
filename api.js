@@ -1,7 +1,7 @@
-// POST /api
 import { Customer, Visit, Payment, Product, Pass } from "./data.js"
 
-export const GET_all = async ({ params, session }) =>
+// GET /api/all
+export const GET_api_all = async ({ params, session }) =>
   new R(
     JSON.stringify({
       customer: Customer,
@@ -12,14 +12,3 @@ export const GET_all = async ({ params, session }) =>
     }),
     { headers: { "content-type": "application/json" } }
   )
-
-
-console.log(JSON.parse(
-  JSON.stringify({
-  customer: Customer,
-  visit: Visit,
-  payment: Payment,
-  product: Product,
-  pass: Pass,
-}))
-)
