@@ -220,7 +220,7 @@ const createTable = table => {
 }
 
 fetch('/api/all').then(r => r.json()).then(tables => {
-  for (const [name, { definitions, values }] of Object.entries(table)) {
+  for (const [name, { definitions, values }] of Object.entries(tables)) {
     createTable({
       name,
       columns: definitions,
