@@ -112,7 +112,7 @@ const definitions = new Map()
 const getById = id => byId[id]
 const getFormater = valueType => {
   if (definitions.has(valueType)) return value => value[ID]
-  if (valueType === Boolean) return n => n == null ? n : Boolean(n)
+  if (valueType === Boolean) return n => n == null ? 0 : 1
   if (valueType === Number) return n => n == null ? n : (Number(n) || 0)
   if (valueType === String) return s => s == null ? s : String(s)
   if (valueType === JSON) return JSON.stringify
