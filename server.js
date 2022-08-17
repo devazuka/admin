@@ -5,6 +5,7 @@ import { isDev, port } from './env.js'
 import { GET_auth_discord, GET_link_discord, GET_logout } from './discord.js'
 import { GET_api_all } from './api.js'
 import { POST_stripe } from './stripe.js'
+import './croissant.js'
 
 const clients = new Map()
 const toBuf = utf8 => new Uint8Array(Buffer.from(utf8))
