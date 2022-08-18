@@ -213,7 +213,7 @@ const createTable = table => {
       span.dataset.col = col
       const formatted = format(val, type, name)
       formatted == null
-        ? span.classList.add(empty)
+        ? span.classList.add('empty')
         : span.append(formatted)
       rowData[name] = val
       rowSpans[col] = span
