@@ -136,8 +136,8 @@ const columnTypeDefs = {
   Number: {
     format: (n, name) => {
       if (n == null) return
-      if (name === 'amount') return `${(n / 10).toFixed(2)}€`
-      return n
+      if (name === 'amount') return `${(n / 100).toFixed(2)}€`
+      return String(n)
     },
   },
   Boolean: { format: v => '', width: '2em' },
@@ -175,6 +175,7 @@ const entityDefs = {
       e.preventDefault()
       location.hash = '#'
     }
+    a.append(`#${v}`)
     return a
   }
 }
