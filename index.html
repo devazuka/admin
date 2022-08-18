@@ -87,13 +87,12 @@ body, span {
 
 .data > span.image { padding: 0 }
 .data > span.image:hover > img {
-  max-width: initial
-  max-width: initial;
+  height: unset;
   position: absolute;
   pointer-events: none;
 }
-.data > span.image:hover { width: 4em }
-.data > span.image > img { width: 4em }
+.data > span.image:hover { height: 4em }
+.data > span.image > img { height: 4em }
 
 .data > b:not(:first-child) {
   border-left: 1px solid white;
