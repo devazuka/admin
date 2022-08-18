@@ -85,8 +85,15 @@ body, span {
   color: white;
 }
 
-.data > span.image:hover > img { max-width: initial }
-.data > span.image > img { max-width: 4em }
+.data > span.image { padding: 0 }
+.data > span.image:hover > img {
+  max-width: initial
+  max-width: initial;
+  position: absolute;
+  pointer-events: none;
+}
+.data > span.image:hover { width: 4em }
+.data > span.image > img { width: 4em }
 
 .data > b:not(:first-child) {
   border-left: 1px solid white;
