@@ -164,6 +164,7 @@ const handleUpdateHash = () => {
 }
 
 const entityDefs = {
+  name: '#',
   format(v) {
     const a = document.createElement('a')
     const hash = `#select-${v}`
@@ -198,9 +199,7 @@ const aliases = {
 
 const prepareColumn = ([name, type], index) => {
   const def = index ? columnTypeDefs[type] || refDefs : entityDefs
-  index || (def.format = )
-    ? ({ width: 'min-content', type, index, name: '#', format: e => {},  })
-    : ({ width: 'min-content', type, index, name })
+  return { width: 'min-content', type, index, name, ...def }
 }
 
 // TODO: add filter
@@ -312,6 +311,7 @@ fetch('/api/all').then(r => r.json()).then(tables => {
       data: values,
     })
   }
+  handleUpdateHash()
 })
 
   </script>
