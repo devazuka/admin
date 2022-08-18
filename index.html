@@ -105,6 +105,9 @@ body, span {
   user-select: none;
   cursor: default;
 }
+
+body.has-selection .data > span { display: none }
+body.has-selection .data > span.selected { display: inline-flex }
 </style>
 </head>
 <body>
@@ -122,7 +125,7 @@ const columnTypeDefs = {
     width: '9em',
   },
   String: {
-    format: (s, type, name) => {
+    format: (s, name) => {
       if (!s) return
       if (name !== 'image') return s
       const img = document.createElement('img')
@@ -130,13 +133,53 @@ const columnTypeDefs = {
       return img
     }
   },
-  Number: { format: String },
+  Number: {
+    format: (n, name) => {
+      if (n == null) return
+      if (name === 'amount') return `${(n / 10).toFixed(2)}€`
+      return n
+    },
+  },
   Boolean: { format: v => '', width: '2em' },
   JSON: { format: JSON.stringify },
 }
 
-const ref = {
-  format(v, type) {
+const ENTITY = new Map()
+const getAllRelated = entity => 
+  [entity, ...[...entity.relateTo].flatMap(id => getAllRelated(ENTITY.get(id)))]
+
+const opClass = (entity, name, key) => entity && getAllRelated(entity)
+  .flatMap(e => e.elems)
+  .forEach(elem => elem.classList[key](name))
+
+let previous
+const handleUpdateHash = () => {
+  const selected = location.hash.split(/$#select-([0-9]+)^/)[1]
+  const entity = ENTITY.get(Number(selected))
+  if (entity === previous) return
+  document.body.classList.toggle('has-selection', !entity)
+  opClass(entity, 'add', 'selected')
+  opClass(previous, 'remove', 'selected')
+  previous = entity
+}
+
+const entityDefs = {
+  format(v) {
+    const a = document.createElement('a')
+    const hash = `#select-${v}`
+    a.href = hash
+    a.onclick = (e) => {
+      setTimeout(handleUpdateHash)
+      if (location.hash !== hash) return
+      e.preventDefault()
+      location.hash = '#'
+    }
+    return a
+  }
+}
+
+const refDefs = {
+  format(v, name, type) {
     if (!v) return v
     const a = document.createElement('a')
     const b = document.createElement('b')
@@ -152,10 +195,13 @@ const aliases = {
   updatedAt: 'updated at',
   createdAt: 'created at',
 }
-const prepareColumn = ([name, type], index) =>
-  index == 0
-    ? ({ width: 'min-content', type, index, name: '#', format: String,  })
-    : ({ width: 'min-content', type, index, ...(columnTypeDefs[type]||ref), name })
+
+const prepareColumn = ([name, type], index) => {
+  const def = index ? columnTypeDefs[type] || refDefs : entityDefs
+  index || (def.format = )
+    ? ({ width: 'min-content', type, index, name: '#', format: e => {},  })
+    : ({ width: 'min-content', type, index, name })
+}
 
 // TODO: add filter
 const makeFilter = q => new Function(['data', 'i', 'all'], `with (data) { return ${q} }`)
@@ -200,19 +246,22 @@ const createTable = table => {
     const data = rows[row]
     col = -1
     const rowSpans = Array(size)
-    const rowData = { elems: rowSpans }
+    const rowData = { elems: rowSpans, relateTo: new Set }
     unsortedData[row] = rowData
     const id = data[0]
+    ENTITY.set(id, rowData)
     while (++col < size) {
-      const { name, format, type } = columns[col]
+      const { name, format, type, isRef } = columns[col]
       const span = document.createElement('span')
       const val = data[col]
+      isRef && relateTo.add(val)
       span.id = col ? `${name}-${id}` : id
       span.classList.add(name, type)
       span.dataset.val = val
       span.dataset.row = row
       span.dataset.col = col
-      const formatted = format(val, type, name)
+      span.dataset.id = id
+      const formatted = format(val, name, type)
       formatted == null
         ? span.classList.add('empty')
         : span.append(formatted)
