@@ -102,16 +102,16 @@ const columnTypeDefs = {
     },
     width: '9em',
   },
-  String: { format: s => s ?? '-',  width: 'min-content' },
-  Number: { format: String,  width: 'min-content' },
+  String: { format: s => s ?? '-' },
+  Number: { format: String },
   Boolean: { format: v => '', width: '2em' },
   JSON: { format: JSON.stringify },
 }
 
-const ref = { format: (v, type) => `${type}(${v})` }
+const ref = { format: (v, type) => `${type}(${v})`,  }
 
 const prepareColumn = ([name, type], index) =>
-  ({ ...(columnTypeDefs[type]||ref), name, type, index })
+  ({ width: 'min-content', ...(columnTypeDefs[type]||ref), name, type, index })
 
 // TODO: add filter
 const makeFilter = q => new Function(['data', 'i', 'all'], `with (data) { return ${q} }`)
