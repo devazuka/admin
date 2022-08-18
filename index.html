@@ -85,6 +85,8 @@ body, span {
   color: white;
 }
 
+.data > span.empty:after { content: '-' }
+
 .data > span.image { padding: 0 }
 .data > span.image:hover > img {
   height: unset;
@@ -92,7 +94,7 @@ body, span {
   pointer-events: none;
 }
 .data > span.image > img { height: 4em }
-.data > span.image:has(> img):hover { height: 4em }
+.data > span.image:not(.empty):hover { height: 4em }
 
 .data > b:not(:first-child) {
   border-left: 1px solid white;
@@ -121,7 +123,6 @@ const columnTypeDefs = {
   },
   String: {
     format: (s, type, name) => {
-      if (s == null) return '-'
       if (name !== 'image') return s
       const img = document.createElement('img')
       img.src = s
@@ -135,7 +136,7 @@ const columnTypeDefs = {
 
 const ref = {
   format(v, type) {
-    if (!v) return '-'
+    if (!v) return v
     const a = document.createElement('a')
     const b = document.createElement('b')
     b.append(v)
@@ -210,7 +211,10 @@ const createTable = table => {
       span.dataset.val = val
       span.dataset.row = row
       span.dataset.col = col
-      span.append(format(val, type, name))
+      const formatted = format(val, type, name)
+      formatted == null
+        ? span.classList.add(empty)
+        : span.append(formatted)
       rowData[name] = val
       rowSpans[col] = span
     }
