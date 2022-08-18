@@ -54,7 +54,7 @@ body, span {
     #000;
 }
 
-.data > span.Boolean:after { content: '❌' }
+.data > span.Boolean:after { content: '✘' }
 .data > span.Boolean[data-val='true']:after { content: '✔' }
 .data > span.Boolean.sex:after { content: '⚧️' }
 .data > span.Boolean.sex[data-val='true']:after { content: '♂️' }
@@ -75,6 +75,11 @@ body, span {
 
 .data > span.even {
   background: rgba(0,0,0,.1);
+}
+
+.data > span:target {
+  background: #70f;
+  color: white;
 }
 
 .data > b:not(:first-child) {
@@ -108,10 +113,21 @@ const columnTypeDefs = {
   JSON: { format: JSON.stringify },
 }
 
-const ref = { format: (v, type) => `${type}(${v})`,  }
+const ref = {
+  format(v, type) {
+    const a = document.createElement('a')
+    const b = document.createElement('b')
+    b.append(`#${v}`)
+    a.append(type, b)
+    a.href = `#${v}`
+    return a
+  },
+}
 
 const prepareColumn = ([name, type], index) =>
-  ({ width: 'min-content', ...(columnTypeDefs[type]||ref), name, type, index })
+  index == 0
+    ? ({ width: 'min-content', type, index, name: '#', format: String,  })
+    : ({ width: 'min-content', type, index, ...(columnTypeDefs[type]||ref), name })
 
 // TODO: add filter
 const makeFilter = q => new Function(['data', 'i', 'all'], `with (data) { return ${q} }`)
@@ -158,15 +174,17 @@ const createTable = table => {
     const rowSpans = Array(size)
     const rowData = { elems: rowSpans }
     unsortedData[row] = rowData
+    const id = data[0]
     while (++col < size) {
       const { name, format, type } = columns[col]
       const span = document.createElement('span')
       const val = data[col]
+      span.id = col ? `${name}-${id}` : id
       span.classList.add(name, type)
       span.dataset.val = val
       span.dataset.row = row
       span.dataset.col = col
-      span.append(format(val))
+      span.append(format(val, type))
       rowData[name] = val
       rowSpans[col] = span
     }
