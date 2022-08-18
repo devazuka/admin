@@ -107,7 +107,15 @@ const columnTypeDefs = {
     },
     width: '9em',
   },
-  String: { format: s => s ?? '-' },
+  String: {
+    format: (s, type, name) => {
+      if (s == null) return '-'
+      if (name !== 'image') return s
+      const img = document.createElement('img')
+      img.src = s
+      return img
+    }
+  },
   Number: { format: String },
   Boolean: { format: v => '', width: '2em' },
   JSON: { format: JSON.stringify },
@@ -190,7 +198,7 @@ const createTable = table => {
       span.dataset.val = val
       span.dataset.row = row
       span.dataset.col = col
-      span.append(format(val, type))
+      span.append(format(val, type, name))
       rowData[name] = val
       rowSpans[col] = span
     }
