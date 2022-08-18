@@ -115,15 +115,21 @@ const columnTypeDefs = {
 
 const ref = {
   format(v, type) {
+    if (!v) return '-'
     const a = document.createElement('a')
     const b = document.createElement('b')
-    b.append(`#${v}`)
-    a.append(type, b)
+    b.append(v)
+    a.append('#', b)
     a.href = `#${v}`
+    a.title = `${type}#${v}`
     return a
   },
 }
 
+const aliases = {
+  updatedAt: 'updated at',
+  createdAt: 'created at',
+}
 const prepareColumn = ([name, type], index) =>
   index == 0
     ? ({ width: 'min-content', type, index, name: '#', format: String,  })
@@ -147,7 +153,7 @@ const createTable = table => {
   for (const { name, type } of columns) {
     const b = document.createElement('b')
     b.classList.add(name, type)
-    b.append(name)
+    b.append(aliases[name] || name)
     b.addEventListener('click', () => {
       if (sorts.name !== name) {
         sorts.b && (sorts.b.dataset.sort = '')
