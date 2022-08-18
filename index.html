@@ -123,6 +123,7 @@ const columnTypeDefs = {
   },
   String: {
     format: (s, type, name) => {
+      if (!s) return
       if (name !== 'image') return s
       const img = document.createElement('img')
       img.src = s
