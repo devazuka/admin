@@ -145,19 +145,26 @@ const columnTypeDefs = {
 }
 
 const ENTITY = new Map()
-const getAllRelated = entity => 
-  [entity, ...[...entity.relateTo].flatMap(id => getAllRelated(ENTITY.get(id)))]
+const getAllRelated = (entity, collected = new Set) => {
+  collected.add(entity)
+  for (const id of entity.relateTo) {
+    const relatedEntity = ENTITY.get(id)
+    if (!relatedEntity || collected.has(relatedEntity)) continue
+      getAllRelated(relatedEntity, collected)
+  }
+  return collected
+}
 
-const opClass = (entity, name, key) => entity && getAllRelated(entity)
+const opClass = (entity, key, name) => entity && [...getAllRelated(entity)]
   .flatMap(e => e.elems)
   .forEach(elem => elem.classList[key](name))
 
 let previous
 const handleUpdateHash = () => {
-  const selected = location.hash.split(/$#select-([0-9]+)^/)[1]
+  const selected = location.hash.split(/^#select-([0-9]+)$/)[1]
   const entity = ENTITY.get(Number(selected))
   if (entity === previous) return
-  document.body.classList.toggle('has-selection', !entity)
+  document.body.classList.toggle('has-selection', Boolean(entity))
   opClass(entity, 'add', 'selected')
   opClass(previous, 'remove', 'selected')
   previous = entity
@@ -181,6 +188,7 @@ const entityDefs = {
 }
 
 const refDefs = {
+  isRef: true,
   format(v, name, type) {
     if (!v) return v
     const a = document.createElement('a')
@@ -245,8 +253,9 @@ const createTable = table => {
   while (++row < maxRow) {
     const data = rows[row]
     col = -1
+    const relateTo = new Set()
     const rowSpans = Array(size)
-    const rowData = { elems: rowSpans, relateTo: new Set }
+    const rowData = { elems: rowSpans, relateTo }
     unsortedData[row] = rowData
     const id = data[0]
     ENTITY.set(id, rowData)
@@ -304,6 +313,14 @@ const createTable = table => {
   document.body.append(wrapper)
 }
 
+const buildRelation = () => {
+  for (const [id, { relateTo }] of ENTITY) {
+    for (const relatedId of relateTo) {
+      ENTITY.get(relatedId)?.relateTo.add(id)
+    }
+  }
+}
+
 fetch('/api/all').then(r => r.json()).then(tables => {
   for (const [name, { definitions, values }] of Object.entries(tables)) {
     createTable({
@@ -312,6 +329,7 @@ fetch('/api/all').then(r => r.json()).then(tables => {
       data: values,
     })
   }
+  buildRelation()
   handleUpdateHash()
 })
 
