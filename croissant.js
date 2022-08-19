@@ -61,7 +61,7 @@ const refreshVisits = async (limit = 10) => {
       const customer = Customer.findOrCreate.croissant(user._id, {
         croissant: user._id,
         fullname: `${user.firstName||''} ${user.lastName||''}`.trim(),
-        image: user.image?.filePath,
+        image: user.image?.filePath || `https://robohash.org/${user._id}`,
       })
       Visit.findOrCreate.id(visit._id, {
         id: visit._id,
