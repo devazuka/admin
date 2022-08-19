@@ -314,7 +314,7 @@ const prepareColumn = ([name, type], index) => {
 
 // TODO: add filter
 const makeFilter = q => new Function(['data', 'i', 'all'], `with (data) { return ${q} }`)
-const createTable = table => {
+const createTable = (table, initialSort = {}) => {
   const wrapper = document.createElement('div')
   const title = document.createElement('h2')
   const div = document.createElement('div')
@@ -326,7 +326,7 @@ const createTable = table => {
   const columns = Object.entries(table.columns).map(prepareColumn)
   const size = columns.length
   div.classList.add(`column-${size}`)
-  let sorts = {}
+  let sorts = initialSort
   for (const { name, type, alias, hidden } of columns) {
     const b = document.createElement('b')
     b.classList.add(name, type)
@@ -344,6 +344,7 @@ const createTable = table => {
         : 'asc'
       sort()
     })
+    sorts.name === name && (b.dataset.sort = sorts.order)
     div.append(b)
   }
 
@@ -424,13 +425,19 @@ const buildRelation = () => {
   }
 }
 
+const initialSorts = {
+  customer: { name: 'fullname', order: 'asc' },
+  visit: { name: 'at', order: 'desc' },
+  payment: { name: 'at', order: 'desc' },
+}
+
 fetch('/api/all').then(r => r.json()).then(tables => {
   for (const [name, { definitions, values }] of Object.entries(tables)) {
     createTable({
       name,
       columns: definitions,
       data: values,
-    })
+    }, initialSorts[name])
   }
   buildRelation()
   handleUpdateHash()
