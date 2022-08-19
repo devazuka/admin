@@ -86,7 +86,6 @@ h1 { text-align: center }
 }
 
 .data > span.empty:after { content: '-' }
-
 .data > span.image { padding: 0 }
 .data > span.image:hover > img {
   height: unset;
@@ -235,7 +234,6 @@ const specialColumns = {
     format(v, name, type, data) {
       const span = document.createElement('span')
       const duration = formatTime(data.at, v)
-      console.log({ v })
       span.append(v ? '' : '🟢 ', duration)
       return span
     }
@@ -244,6 +242,7 @@ const specialColumns = {
   type: { hidden: true },
   product: { hidden: true },
   status: { hidden: true },
+  alias: { hidden: true },
   id: { hidden: true },
 }
 
@@ -320,8 +319,8 @@ const createTable = (table, initialSort = {}) => {
   const div = document.createElement('div')
   wrapper.id = table.name
   title.append(table.name)
-  div.classList.add('data')
   wrapper.append(title, div)
+  div.classList.add('data')
 
   const columns = Object.entries(table.columns).map(prepareColumn)
   const size = columns.length
@@ -344,7 +343,10 @@ const createTable = (table, initialSort = {}) => {
         : 'asc'
       sort()
     })
-    sorts.name === name && (b.dataset.sort = sorts.order)
+    if (sorts.name === name) {
+      b.dataset.sort = sorts.order
+      sorts.b = b
+    }
     div.append(b)
   }
 

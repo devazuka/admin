@@ -20,6 +20,7 @@ export const Customer = defineEntity('customer', {
   image: String, // from croissant
   email: String, // from stripe
   tax: String, // from stripe nif details
+  alias: Number, // copy of an existing user
 })
 
 export const Visit = defineEntity('visit', {

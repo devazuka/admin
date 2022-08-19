@@ -109,14 +109,14 @@ const UPDATED_AT = Symbol('UPDATED_AT')
 const CREATED_AT = Symbol('CREATED_AT')
 const byId = Object.create(null)
 const definitions = new Map()
-const getById = id => byId[id]
+export const getById = id => byId[id]
 const getFormater = valueType => {
   if (definitions.has(valueType)) return value => value[ID]
   if (valueType === Boolean) return n => n == null ? 0 : 1
-  if (valueType === Number) return n => n == null ? n : (Number(n) || 0)
-  if (valueType === String) return s => s == null ? s : String(s)
+  if (valueType === Number) return n => n == null ? undefined : (Number(n) || 0)
+  if (valueType === String) return s => s == null ? undefined : String(s)
   if (valueType === JSON) return JSON.stringify
-  if (valueType === Date) return value => new Date(value).getTime()
+  if (valueType === Date) return n => n == null ? undefined : (new Date(n).getTime() || 0)
   return _ => _
 }
 
@@ -125,7 +125,7 @@ const getParser = valueType => {
   if (valueType === Boolean) return Boolean
   if (valueType === String) return String
   if (valueType === JSON) return JSON.parse
-  if (valueType === Date) return value => new Date(value)
+  if (valueType === Date) return n => n == null ? undefined : new Date(n)
   return v => (v == null ? undefined : v)
 }
 
@@ -162,6 +162,9 @@ export const defineEntity = (name, defs) => {
       update(v, r) {
         return update(this, v, r)
       }
+      get _id() {
+        return this[ID]
+      }
       get createdAt() {
         return getCreatedAt(this)
       }
@@ -190,7 +193,9 @@ export const defineEntity = (name, defs) => {
     for (const [k, v] of Object.entries(values)) {
       const f = formatter[k]
       if (!f) continue // ignore values not defined
-      v === e[k] || changes.push({ k, v: f(v) })
+      const next = f(v)
+      const prev = f(e[k])
+      next === prev || changes.push({ k, v: next })
     }
     if (!changes.length) return e
     const t = performance.now() + start
@@ -229,9 +234,10 @@ export const defineEntity = (name, defs) => {
     }
   }
 
-  create.findOrCreate = (fn, args, data) => {
+  create.findOrCreate = (fn, args, data, maxAt) => {
     const match = create.find(fn, args)
-    return match ? match.update(data) : create(data)
+    if (!match) return create(data)
+    return match.updatedAt >= maxAt ? match : match.update(data)
   }
 
   create.filter = (fn, args) => {
@@ -281,6 +287,7 @@ export const defineEntity = (name, defs) => {
       updatedAt: 'Date',
     },
   })
+  create.is = value => value instanceof Entity
 
   return create
 }

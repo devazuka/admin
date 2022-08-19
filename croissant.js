@@ -58,17 +58,15 @@ const refreshVisits = async (limit = 10) => {
     lastUpdate = now
     for (const visit of visits) {
       const { user } = visit
+      const at = new Date(visit.begin)
+      const end = visit.end && new Date(visit.end)
+      const updateTime = end?.getTime() || at.getTime()
       const customer = Customer.findOrCreate.croissant(user._id, {
         croissant: user._id,
         fullname: `${user.firstName||''} ${user.lastName||''}`.trim(),
         image: user.image?.filePath || `https://robohash.org/${user._id}`,
-      })
-      Visit.findOrCreate.id(visit._id, {
-        id: visit._id,
-        by: customer,
-        at: new Date(visit.begin),
-        end: visit.end && new Date(visit.end),
-      })
+      }, updateTime)
+      Visit.findOrCreate.id(visit._id, { id: visit._id, by: customer, at, end })
       for (const guest of visit.guests) {
         Visit.findOrCreate.id(guest._id, {
           id: guest._id,

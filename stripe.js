@@ -13,15 +13,16 @@ const loadAllCharges = async () => {
   for (const charge of data) {
     const email = charge.billing_details?.email || charge.receipt_email
     const hash = email && createHash('md5').update(email).digest("hex")
+    const at = charge.created * 1000
     const customer = Customer.findOrCreate.email(email, {
       email,
       image: hash && `https://robohash.org/${hash}?gravatar=hashed`,
       fullname: charge.billing_details?.name,
-    })
+    }, at)
     Payment.findOrCreate.id(charge.id, {
       id: charge.id,
       by: customer,
-      at: charge.created * 1000,
+      at,
       amount: charge.amount,
       disputed: charge.disputed,
       refunded: charge.refuned,

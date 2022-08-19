@@ -3,7 +3,7 @@ import uWS from 'uws'
 import { R } from './response.js'
 import { isDev, port } from './env.js'
 import { GET_auth_discord, GET_link_discord, GET_logout } from './discord.js'
-import { GET_api_all } from './api.js'
+import { GET_api_all, GET_api_customer_merge } from './api.js'
 import { POST_stripe } from './stripe.js'
 import './croissant.js'
 
@@ -108,6 +108,7 @@ const server = uWS.App()
 })
 .post('/stripe', handle(POST_stripe))
 .get('/api/all', handle(GET_api_all))
+.get('/api/customer/merge', handle(GET_api_customer_merge))
 .get('/auth/discord', handle(GET_auth_discord))
 .get('/link/discord', handle(GET_link_discord))
 .get('/logout', handle(GET_logout))
