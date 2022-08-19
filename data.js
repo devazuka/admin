@@ -48,9 +48,3 @@ export const Payment = defineEntity('payment', {
   refunded: Boolean,
   status: String,
 })
-
-export const Pass = defineEntity('pass', {
-  at: Date,
-  end: Date,
-  source: Payment,
-})

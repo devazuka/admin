@@ -1,4 +1,4 @@
-import { Customer, Visit, Payment, Product, Pass } from "./data.js"
+import { Customer, Visit, Payment, Product } from "./data.js"
 import { R } from './response.js'
 
 // GET /api/all
@@ -9,7 +9,6 @@ export const GET_api_all = async ({ params, session }) =>
       visit: Visit,
       payment: Payment,
       product: Product,
-      pass: Pass,
     }),
     { headers: { "content-type": "application/json" } }
   )
