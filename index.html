@@ -114,15 +114,50 @@ body.has-selection .data > span.selected { display: inline-flex }
   <h1>Admin</h1>
   <script>
 const f2 = n => n < 10 ? ('0'+n) : n
+
+const units = [
+  ['year', 31536000000],
+  ['month', 2628000000],
+  ['day', 86400000],
+  ['hour', 3600000],
+  ['minute', 60000],
+  ['second', 1000],
+]
+
+const rtf = new Intl.RelativeTimeFormat('en', { style:'narrow'})
+const relatime = elapsed => {
+  for (const [unit, amount] of units) {
+    if (Math.abs(elapsed) > amount || unit === 'second') {
+      return rtf.format(Math.round(elapsed/amount), unit)
+    }
+  }
+}
+
+const call = f => f()
+const everySecondSub = new Set
+const triggerUpdates = () => {
+  requestAnimationFrame(() => everySecondSub.forEach(call))
+  setTimeout(triggerUpdates, 1000)
+}
+triggerUpdates()
 const columnTypeDefs = {
   Date: {
     format: ts => {
+      const elem = document.createElement('time')
       const d = new Date(ts)
       const time = f2(d.getHours()) +':'+ f2(d.getMinutes()) +':'+ f2(d.getSeconds())
-      const date = f2(d.getDate()) +'/'+ f2(d.getMonth()+1) +'/'+ f2(d.getFullYear())
-      return `${date} ${time}`
+      const date = f2(d.getDate()) +'-'+ f2(d.getMonth()+1) +'-'+ f2(d.getFullYear())
+      elem.title = (elem.dateTime = `${date} ${time}`)
+      let prevValue = relatime(Date.now() - d.getTime())
+      const text = document.createTextNode(prevValue)
+      everySecondSub.add(() => {
+        const value = relatime(d.getTime() - Date.now())
+        if (value === prevValue) return
+        text.nodeValue = (prevValue = value)
+      })
+      elem.append(text)
+      return elem
     },
-    width: '9em',
   },
   String: {
     format: (s, name) => {
@@ -142,6 +177,33 @@ const columnTypeDefs = {
   },
   Boolean: { format: v => '', width: '2em' },
   JSON: { format: JSON.stringify },
+}
+
+const specialColumns = {
+  image: {
+    format(src) {
+      if (!src) return
+      const img = document.createElement('img')
+      img.src = src
+      return img
+    },
+  },
+  amount: {
+    alias: '€',
+    format: n => `${(n / 100)}€`,
+  },
+  refunded: { alias: '♻️' },
+  disputed: { alias: '👩‍⚖️' },
+  croissant: {
+    alias: ' ',
+    format: v => v ? '🥐' : '💳',
+  },
+  createdAt: {
+    alias: 'saved',
+  },
+  updatedAt: {
+    alias: 'changed',
+  }
 }
 
 const ENTITY = new Map()
@@ -169,6 +231,7 @@ const handleUpdateHash = () => {
   opClass(previous, 'remove', 'selected')
   previous = entity
 }
+addEventListener('hashchange', handleUpdateHash)
 
 const entityDefs = {
   name: '#',
@@ -177,7 +240,6 @@ const entityDefs = {
     const hash = `#select-${v}`
     a.href = hash
     a.onclick = (e) => {
-      setTimeout(handleUpdateHash)
       if (location.hash !== hash) return
       e.preventDefault()
       location.hash = '#'
@@ -201,13 +263,11 @@ const refDefs = {
   },
 }
 
-const aliases = {
-  updatedAt: 'updated at',
-  createdAt: 'created at',
-}
-
 const prepareColumn = ([name, type], index) => {
-  const def = index ? columnTypeDefs[type] || refDefs : entityDefs
+  const def = index
+    ? ({ ...(columnTypeDefs[type] || refDefs), ...specialColumns[name] })
+    : entityDefs
+
   return { width: 'min-content', type, index, name, ...def }
 }
 
@@ -226,10 +286,10 @@ const createTable = table => {
   const size = columns.length
   div.classList.add(`column-${size}`)
   let sorts = {}
-  for (const { name, type } of columns) {
+  for (const { name, type, alias } of columns) {
     const b = document.createElement('b')
     b.classList.add(name, type)
-    b.append(aliases[name] || name)
+    b.append(alias || name)
     b.addEventListener('click', () => {
       if (sorts.name !== name) {
         sorts.b && (sorts.b.dataset.sort = '')
