@@ -9,6 +9,7 @@ const stripe = S(STRIPE_SECRET)
 let starting_after
 const loadAllCharges = async () => {
   const { has_more, data } = await stripe.charges.list({ starting_after, limit: 100 })
+  if (!data.length) return
   for (const charge of data) {
     const email = charge.billing_details?.email || charge.receipt_email
     const hash = email && createHash('md5').update(email).digest("hex")
