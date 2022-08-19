@@ -111,7 +111,7 @@ const byId = Object.create(null)
 const definitions = new Map()
 export const getById = id => byId[id]
 const getFormater = valueType => {
-  if (definitions.has(valueType)) return value => value[ID]
+  if (definitions.has(valueType)) return value => value == null ? undefined : value[ID]
   if (valueType === Boolean) return n => n == null ? 0 : 1
   if (valueType === Number) return n => n == null ? undefined : (Number(n) || 0)
   if (valueType === String) return s => s == null ? undefined : String(s)
