@@ -26,16 +26,16 @@
 }
 body {
   margin: 0 auto;
-  width: fit-content;
 }
 
 body, span {
   font-family: 'Inconsolata', monospace;
 }
+
+h1 { text-align: center }
 .data {
   display: grid;
   border-right: 1px solid black;
-  width: fit-content;
 }
 
 .data > b[data-sort=asc] {
@@ -96,9 +96,6 @@ body, span {
 .data > span.image > img { height: 4em }
 .data > span.image:not(.empty):hover { height: 4em }
 
-.data > b:not(:first-child) {
-  border-left: 1px solid white;
-}
 .data > b {
   background: black;
   color: white;
@@ -106,15 +103,30 @@ body, span {
   cursor: default;
 }
 
-body.has-selection .data > span { display: none }
-body.has-selection .data > span.selected { display: inline-flex }
+.data > *.hidden {
+  width: 0px;
+  overflow: hidden;
+  border: 0;
+  padding: 0;
+  outline: none;
+  margin-right: -1px;
+}
+main {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+}
+main.has-selection .data > span { display: none }
+main.has-selection .data > span.selected { display: inline-flex }
 </style>
 </head>
 <body>
   <h1>Admin</h1>
+  <main></main>
   <script>
-const f2 = n => n < 10 ? ('0'+n) : n
+const CONTENT = document.querySelector('main')
 
+const f2 = n => n < 10 ? ('0'+n) : n
 const units = [
   ['year', 31536000000],
   ['month', 2628000000],
@@ -140,24 +152,30 @@ const triggerUpdates = () => {
   setTimeout(triggerUpdates, 1000)
 }
 triggerUpdates()
+const formatTime = (start, end) => {
+  const elem = document.createElement('time')
+  const d = new Date(start)
+  const time = f2(d.getHours()) +':'+ f2(d.getMinutes()) +':'+ f2(d.getSeconds())
+  const date = f2(d.getDate()) +'-'+ f2(d.getMonth()+1) +'-'+ f2(d.getFullYear())
+  elem.title = (elem.dateTime = `${date} ${time}`)
+  if (end) {
+    const text = relatime(end - start)
+    elem.append(text.slice(3, -1))
+  } else {
+    let prevValue = relatime(Date.now() - d.getTime())
+    const text = document.createTextNode(prevValue)
+    everySecondSub.add(() => {
+      const value = relatime(d.getTime() - Date.now())
+      if (value === prevValue) return
+      text.nodeValue = (prevValue = value)
+    })
+    elem.append(text)
+  }
+  return elem
+}
 const columnTypeDefs = {
   Date: {
-    format: ts => {
-      const elem = document.createElement('time')
-      const d = new Date(ts)
-      const time = f2(d.getHours()) +':'+ f2(d.getMinutes()) +':'+ f2(d.getSeconds())
-      const date = f2(d.getDate()) +'-'+ f2(d.getMonth()+1) +'-'+ f2(d.getFullYear())
-      elem.title = (elem.dateTime = `${date} ${time}`)
-      let prevValue = relatime(Date.now() - d.getTime())
-      const text = document.createTextNode(prevValue)
-      everySecondSub.add(() => {
-        const value = relatime(d.getTime() - Date.now())
-        if (value === prevValue) return
-        text.nodeValue = (prevValue = value)
-      })
-      elem.append(text)
-      return elem
-    },
+    format: ts => formatTime(ts),
   },
   String: {
     format: (s, name) => {
@@ -196,14 +214,37 @@ const specialColumns = {
   disputed: { alias: '👩‍⚖️' },
   croissant: {
     alias: ' ',
-    format: v => v ? '🥐' : '💳',
+    format(v) {
+      if (!v) return '💳'
+      const span = document.createElement('span')
+      span.title = v
+      span.append('🥐')
+      return span
+    }
   },
   createdAt: {
+    hidden: true,
     alias: 'saved',
   },
   updatedAt: {
+    hidden: true,
     alias: 'changed',
-  }
+  },
+  end: {
+    alias: 'time',
+    format(v, name, type, data) {
+      const span = document.createElement('span')
+      const duration = formatTime(data.at, v)
+      console.log({ v })
+      span.append(v ? '' : '🟢 ', duration)
+      return span
+    }
+  },
+  tax: { hidden: true },
+  type: { hidden: true },
+  product: { hidden: true },
+  status: { hidden: true },
+  status: { hidden: true },
 }
 
 const ENTITY = new Map()
@@ -226,7 +267,7 @@ const handleUpdateHash = () => {
   const selected = location.hash.split(/^#select-([0-9]+)$/)[1]
   const entity = ENTITY.get(Number(selected))
   if (entity === previous) return
-  document.body.classList.toggle('has-selection', Boolean(entity))
+  CONTENT.classList.toggle('has-selection', Boolean(entity))
   opClass(entity, 'add', 'selected')
   opClass(previous, 'remove', 'selected')
   previous = entity
@@ -286,9 +327,10 @@ const createTable = table => {
   const size = columns.length
   div.classList.add(`column-${size}`)
   let sorts = {}
-  for (const { name, type, alias } of columns) {
+  for (const { name, type, alias, hidden } of columns) {
     const b = document.createElement('b')
     b.classList.add(name, type)
+    b.classList.toggle('hidden', Boolean(hidden))
     b.append(alias || name)
     b.addEventListener('click', () => {
       if (sorts.name !== name) {
@@ -320,17 +362,18 @@ const createTable = table => {
     const id = data[0]
     ENTITY.set(id, rowData)
     while (++col < size) {
-      const { name, format, type, isRef } = columns[col]
+      const { name, format, type, isRef, hidden } = columns[col]
       const span = document.createElement('span')
       const val = data[col]
       isRef && relateTo.add(val)
       span.id = col ? `${name}-${id}` : id
       span.classList.add(name, type)
+      span.classList.toggle('hidden', Boolean(hidden))
       span.dataset.val = val
       span.dataset.row = row
       span.dataset.col = col
       span.dataset.id = id
-      const formatted = format(val, name, type)
+      const formatted = format(val, name, type, rowData)
       formatted == null
         ? span.classList.add('empty')
         : span.append(formatted)
@@ -370,7 +413,7 @@ const createTable = table => {
     ? sortedData.sort(sorts.order === 'asc' ? compareASC : compareDESC)
     : unsortedData)
   sort()
-  document.body.append(wrapper)
+  CONTENT.append(wrapper)
 }
 
 const buildRelation = () => {
