@@ -2,9 +2,9 @@ import { readFileSync } from 'node:fs'
 import uWS from 'uws'
 import { R } from './response.js'
 import { isDev, port } from './env.js'
-import { GET_auth_discord, GET_link_discord, GET_logout } from './discord.js'
-import { GET_api_all, GET_api_customer_merge } from './api.js'
-import { POST_stripe } from './stripe.js'
+import * as discordRoutes from './discord.js'
+import * as apiRoutes from './api.js'
+import * as stripeRoutes from './stripe.js'
 import './croissant.js'
 
 const clients = new Map()
@@ -52,6 +52,15 @@ const getSession = req => {
   return cookieStr.slice(x + 17, y < x ? cookieStr.length : y)
 }
 
+const decode = new TextDecoder().decode.bind(new TextDecoder())
+export const parseJSON = (res, callback) => {
+  let acc = ''
+  res.onData((chunk, isLast) => {
+    acc += decode(chunk)
+    isLast && handleStripeWebhook(JSON.parse(acc))
+  })
+}
+
 const emptyResponse = new R('', { status: 204 })
 const handle = action => async (res, req) => {
   const controller = new AbortController
@@ -60,7 +69,21 @@ const handle = action => async (res, req) => {
   const url = req.getUrl()
   const params = new URLSearchParams(req.getQuery())
   const session = getSession(req)
-  const response = await action({ url, params, session, signal, req, res })
+  let body
+  const response = await action({
+    url,
+    params,
+    session,
+    signal,
+    req,
+    res,
+    get body() {
+      return body || (body = new Promise((s, f) => {
+        signal.addEventListener('aborted', () => f(emptyResponse))
+        parseJSON(res, s)
+      }))
+    }
+  })
     .catch(errToResponse) || emptyResponse
   if (signal.aborted) return
   res.writeStatus(response.status)
@@ -68,7 +91,6 @@ const handle = action => async (res, req) => {
   res.end(response.body)
 }
 
-const decode = TextDecoder.prototype.decode.bind(new TextDecoder)
 const server = uWS.App()
 .ws('/*', {
   // compression: uWS.SHARED_COMPRESSOR,
@@ -106,13 +128,16 @@ const server = uWS.App()
     console.log(ws.id, 'WebSocket closed')
   },
 })
-.post('/stripe', handle(POST_stripe))
-.get('/api/all', handle(GET_api_all))
-.get('/api/customer/merge', handle(GET_api_customer_merge))
-.get('/auth/discord', handle(GET_auth_discord))
-.get('/link/discord', handle(GET_link_discord))
-.get('/logout', handle(GET_logout))
 //.get('/lib/style.css', serveStatic('./lib/style.css'))
-//.get('/lib/script.js', serveSt, resatic('./lib/script.js'))
-.get('/*', serveStatic('./index.html'))
-.listen(port, err => console.log(err, { port }))
+//.get('/lib/script.js', serveStatic('./lib/script.js'))
+
+const routes = { ...discordRoutes, ...apiRoutes, ...stripeRoutes }
+for (const [route, hander] of Object.entries(routes)) {
+  const [method, ...path] = route.toLowerCase().split('_')
+  console.log(method.toUpperCase(), `/${path.join('/')}`)
+  server[method](`/${path.join('/')}`, handle(hander))
+}
+
+server
+  .get('/*', serveStatic('./index.html'))
+  .listen(port, err => console.log(err, { port }))

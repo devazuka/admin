@@ -117,10 +117,118 @@ main {
 }
 main.has-selection .data > span { display: none }
 main.has-selection .data > span.selected { display: inline-flex }
+
+input[value="person"][type="radio"]:checked {
+  border: 2px solid red;
+}
+
+h3 { text-align: center }
+h2 {
+  text-align: center;
+  color: white;
+  background: black;
+}
+form {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+}
+#add-user .text > input, #add-user label > textarea {
+  flex-grow: 1;
+  margin: 0.5em 0.25em;
+}
+#add-user .text:focus-within > span {
+  background: #70f;
+}
+.text div label { display: block; }
+label { white-space: nowrap }
+#add-user .text > span {
+  flex-shrink: 0;
+  width: 5em;
+  text-align: right;
+  color: white;
+  background: black;
+  padding: 0.5em 0.25em;
+}
+#add-user .text {
+  display: flex;
+  flex-direction: row;
+}
+#add-user {
+  display: flex;
+  flex-direction: column;
+}
 </style>
 </head>
 <body>
   <h1>Admin</h1>
+  <h2>Actions</h2>
+  <form>
+    <div>
+      <h3>👨‍💻 Users 👩‍💻</h3>
+      <div id="add-user">
+        <h4>🗃️ Register new user</h4>
+        <label class="text"><span>Email:</span><input name="email" type="email"></label>
+        <label class="text"><span>Name:</span><input name="name"></label>
+        <label class="text"><span>Image:</span><input name="image"></label>
+        <label class="text"><span>Notes:</span><textarea name="notes"></textarea></label>
+        <label class="text"><span>Birthday:</span><input name="birth" type="date"></label>
+        <div class="text">
+          <span>Org:</span>
+          <label><input type="radio" name="org" value="" checked>None</label>
+          <label><input type="radio" name="org" value="01">01</label>
+          <label><input type="radio" name="org" value="devazuka">DEVAZUKA</label>
+        </div>
+        <div class="text">
+          <span>Referral:</span>
+          <div>
+            <label><input type="radio" name="referral" value="other" checked>Other</label>
+            <label><input type="radio" name="referral" value="instagram">Instagram</label>
+            <label><input type="radio" name="referral" value="linkedin">Linkedin</label>
+            <label><input type="radio" name="referral" value="facebook">Facebook</label>
+            <label><input type="radio" name="referral" value="meetup">Meetup</label>
+            <label><input type="radio" name="referral" value="tiktok">Tiktok</label>
+            <label><input type="radio" name="referral" value="google">Google</label>
+            <label><input type="radio" name="referral" value="map">Map</label>
+            <div id="referral-group">
+              <label><input type="radio" name="referral" value="person">Person:</label>
+              <input name="referral-entity" class="person-input">
+            </div>
+          </div>
+        </div>
+        <button>⬆️ Create</button>
+      </div>
+      <div id="payment-link">
+        <h4>💳 Link Payments</h4>
+        <!-- generate the list -->
+      </div>
+      <div id="visit-link">
+        <h4>🥐 Link Visits</h4>
+        <!-- generate the list -->
+      </div>
+    </div>
+    <div>
+      <h3>⌛ Active Visits</h3>
+      <div id="active-visit">
+        <!--
+          generate the list
+          with button to check-out for managed visit (not croissant)
+        <div>
+          <button id="check-out">❌ check out</button>
+          <button id="drink">🥤 drink</button>
+          <button id="day_pass">🕑 day pass</button>
+          <button id="month_pass">🗓️ monthly pass</button>
+        </div>
+        -->
+      </div>
+    </div>
+    <div>
+      <h3>🛂 Check-in</h3>
+      <label><span>Person:</span><input name="visit-person" class="person-input"></label>
+      <button id="check-in">▶️ check in</button>
+    </div>
+  </form>
+  <h2>Data</h2>
   <main></main>
   <script>
 const CONTENT = document.querySelector('main')
@@ -222,11 +330,11 @@ const specialColumns = {
     }
   },
   createdAt: {
-    hidden: true,
+    // hidden: true,
     alias: 'saved',
   },
   updatedAt: {
-    hidden: true,
+    // hidden: true,
     alias: 'changed',
   },
   end: {
@@ -240,10 +348,10 @@ const specialColumns = {
   },
   tax: { hidden: true },
   type: { hidden: true },
-  product: { hidden: true },
+  // product: { hidden: true },
   status: { hidden: true },
   alias: { hidden: true },
-  id: { hidden: true },
+  // id: { hidden: true },
 }
 
 const ENTITY = new Map()
@@ -315,7 +423,7 @@ const prepareColumn = ([name, type], index) => {
 const makeFilter = q => new Function(['data', 'i', 'all'], `with (data) { return ${q} }`)
 const createTable = (table, initialSort = {}) => {
   const wrapper = document.createElement('div')
-  const title = document.createElement('h2')
+  const title = document.createElement('h3')
   const div = document.createElement('div')
   wrapper.id = table.name
   title.append(table.name)
@@ -429,12 +537,16 @@ const buildRelation = () => {
 
 const initialSorts = {
   customer: { name: 'fullname', order: 'asc' },
+  coworker: { name: 'fullname', order: 'asc' },
+  person: { name: 'fullname', order: 'asc' },
   visit: { name: 'at', order: 'desc' },
   payment: { name: 'at', order: 'desc' },
 }
 
 fetch('/api/all').then(r => r.json()).then(tables => {
   for (const [name, { definitions, values }] of Object.entries(tables)) {
+    if (name === 'product') continue
+    if (name === 'referral') continue
     createTable({
       name,
       columns: definitions,

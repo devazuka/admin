@@ -1,32 +1,31 @@
-import { createHash } from 'node:crypto'
 
 import S from 'stripe'
 import { STRIPE_SECRET, STRIPE_SIGNATURE } from './env.js'
-import { Customer, Payment } from './data.js'
+import { Customer, Payment, Product } from './data.js'
 
 const stripe = S(STRIPE_SECRET)
 
 let starting_after
+const productByCost = Object.fromEntries(Product.entities.map(p => [p.cost, p]))
 const loadAllCharges = async () => {
   const { has_more, data } = await stripe.charges.list({ starting_after, limit: 100 })
   if (!data.length) return
   for (const charge of data) {
     const email = charge.billing_details?.email || charge.receipt_email
-    const hash = email && createHash('md5').update(email).digest("hex")
     const at = charge.created * 1000
-    const customer = Customer.findOrCreate.email(email, {
-      email,
-      image: hash && `https://robohash.org/${hash}?gravatar=hashed`,
-      fullname: charge.billing_details?.name,
+    const customer = Customer.from.email(email, {
+      email: email.toLowerCase(),
+      fullname: charge.billing_details?.name?.toLowerCase(),
     }, at)
-    Payment.findOrCreate.id(charge.id, {
+    if (charge.status !== 'succeeded') continue
+    Payment.from.id(charge.id, {
       id: charge.id,
-      by: customer,
+      by: customer.is || customer,
       at,
       amount: charge.amount,
+      product: productByCost[charge.amount],
       disputed: charge.disputed,
       refunded: charge.refuned,
-      status: charge.status,
     })
   }
   starting_after = data.at(-1).id
@@ -44,13 +43,8 @@ const handleStripeWebhook = () => {
   // STRIPE_SIGNATURE
 }
 
-const decode = new TextDecoder().decode.bind(new TextDecoder())
 // POST /stripe
-export const POST_stripe = async ({ res }) => {
-  let acc = ''
-  res.onData((chunk, isLast) => {
-    acc += decode(chunk)
-    isLast && handleStripeWebhook(JSON.parse(acc))
-  })
+export const POST_stripe = async ({ body }) => {
+  body.then(handleStripeWebhook)
 }
 

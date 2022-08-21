@@ -16,3 +16,11 @@ export class R {
     this.headers = headers ? Object.entries(headers).map(toHeader) : EMPTY
   }
 }
+
+// static errors
+R.error = Object.fromEntries(
+  Object.entries(STATUS_CODES).map(([status, text]) => [
+    text[0].toLowerCase() + text.slice(1).replace(/[^a-z]/gi, ''),
+    err => new R(err.stack, { status }),
+  ])
+)

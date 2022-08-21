@@ -10,7 +10,7 @@ const BAD_REQUEST = { status: 400, statusText: 'Bad Request' }
 const UNAUTHORIZED = { status: 401, statusText: 'Unauthorized' }
 const TYPE_JSON = { 'content-type': 'application/json' }
 
-export const rand = () =>
+const rand = () =>
   Math.random().toString(36).slice(2, 12).padEnd(10, '0')
 
 const GUILD = '957694647084400761'

@@ -1,5 +1,5 @@
 import { CROISSANT_SECRET } from './env.js'
-import { Customer, Visit } from './data.js'
+import { Coworker, Visit } from './data.js'
 
 const api = async (path, { params, headers, ...opts } = {}) => {
   const search = params ? `?${new URLSearchParams(params)}` : ''
@@ -61,19 +61,24 @@ const refreshVisits = async (limit = 10) => {
       const at = new Date(visit.begin)
       const end = visit.end && new Date(visit.end)
       const updateTime = end?.getTime() || at.getTime()
-      const customer = Customer.findOrCreate.croissant(user._id, {
-        croissant: user._id,
-        fullname: `${user.firstName||''} ${user.lastName||''}`.trim(),
-        image: user.image?.filePath || `https://robohash.org/${user._id}`,
+      const coworker = Coworker.from.id(user._id, {
+        id: user._id,
+        fullname: `${user.firstName||''} ${user.lastName||''}`.trim().toLowerCase(),
+        image: user.image?.filePath,
       }, updateTime)
-      Visit.findOrCreate.id(visit._id, { id: visit._id, by: customer, at, end })
+      const person = coworker.is
+      const by = person || coworker
+      if (coworker.image && person && (!person.image || person.image.startsWith('https://robohash.org/'))) {
+        person.update({ image: coworker.image })
+      }
+      Visit.from.id(visit._id, { id: visit._id, by, at, end })
       for (const guest of visit.guests) {
-        Visit.findOrCreate.id(guest._id, {
+        Visit.from.id(guest._id, {
           id: guest._id,
-          by: customer,
+          by,
           at: new Date(guest.begin),
           end: guest.end && new Date(guest.end),
-          guest: `${guest.firstName||''} ${guest.lastName||''}`.trim(),
+          guest: `${guest.firstName||''} ${guest.lastName||''}`.trim().toLowerCase(),
         })
       }
     }

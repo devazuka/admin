@@ -14,13 +14,54 @@ export const User = defineEntity('user', {
   session: String,
 })
 
+export const Referral = defineEntity('referral', { id: String })
+export const {
+  instagram,
+  linkedin,
+  facebook,
+  meetup,
+  tiktok,
+  google,
+  other,
+  map,
+} = new Proxy({}, { get: (_, id) => Referral.from.id(id, { id }) })
+
+export const Product = defineEntity('product', {
+  id: String, // 'drink' || 'day_pass' || 'month_pass'
+  cost: Number, // in cents
+  // availability ?
+  // description ?
+})
+
+const addProduct = (id, cost) => Product.from.id(id, { id, cost })
+export const drink = addProduct('drink', 200)
+export const dayPass = addProduct('day_pass', 1500)
+export const monthPass = addProduct('month_pass', 15000)
+
+// Our own infos
+export const Person = defineEntity('person', {
+  fullname: String,
+  image: String,
+  email: String,
+  birth: Date,
+  notes: String,
+  referral: Referral, // source OR person
+})
+
+// From croissant
+export const Coworker = defineEntity('coworker', {
+  id: String,
+  fullname: String,
+  image: String,
+  is: Person,
+})
+
+// From stripe
 export const Customer = defineEntity('customer', {
-  croissant: String, // id form croissant
-  fullname: String, // from stripe & croissant
-  image: String, // from croissant
-  email: String, // from stripe
-  tax: String, // from stripe nif details
-  alias: Number, // copy of an existing user
+  email: String,
+  fullname: String,
+  // tax: String, // not sure where this is stored yet
+  is: Person,
 })
 
 export const Visit = defineEntity('visit', {
@@ -31,21 +72,13 @@ export const Visit = defineEntity('visit', {
   guest: String, // name of the guest
 })
 
-export const Product = defineEntity('product', {
-  id: String, // 'drink' || 'day_pass' || 'month_pass'
-  cost: Number, // in cents
-  // availability ?
-  // description ?
-})
-
 export const Payment = defineEntity('payment', {
-  id: String, // stripe id
-  by: Customer,
+  id: String, // stripe id (empty = cash)
+  by: Customer, // or person
   at: Date,
-  type: String, // 'stripe' || 'cash',
+  org: String, // DEVAZUKA | 01
   product: Product,
   amount: Number, // in cents
   disputed: Boolean,
   refunded: Boolean,
-  status: String,
 })

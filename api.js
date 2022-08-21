@@ -1,25 +1,58 @@
+import { createHash } from 'node:crypto'
+
 import { getById } from './atoms.js'
-import { Customer, Visit, Payment, Product } from "./data.js"
+import { Visit, Payment, Product, Referral, Person, Customer, Coworker } from "./data.js"
 import { R } from './response.js'
 
 // GET /api/all
 export const GET_api_all = async ({ params, session }) =>
   new R(
     JSON.stringify({
+      person: Person,
+      coworker: Coworker,
       customer: Customer,
-      visit: Visit,
       payment: Payment,
+      visit: Visit,
       product: Product,
+      referral: Referral,
     }),
     { headers: { "content-type": "application/json" } }
   )
 
-// GET /api/customer/merge
-export const GET_api_customer_merge = async ({ params }) => {
-  const source = getById(params.get('source'))
-  const target = getById(params.get('target'))
-  if (!Customer.is(source) || !Customer.is(target)) {
-    throw Error('both source & target must be Customers')
+// POST /api/person
+export const POST_api_person = async ({ body }) => {
+  const { _id, ...data } = await body
+  const person = _id ? Person.get(_id).update(data) : Person(data)
+  if (person.image && !person.image.startsWith('https://robohash.org/')) return person
+  if (person.email && !person.image?.endsWith('?gravatar=hashed')) {
+    const hash = createHash('md5').update(person.email).digest("hex")
+    return person.update({ image: `https://robohash.org/${hash}?gravatar=hashed` })
   }
-  source.update({ alias: target._id })
+  const hash = createHash('md5').update(`${person._id}${person.fullname}`).digest("hex")
+  return person.update({ image: `https://robohash.org/${hash}` })
+}
+
+// POST /api/link/customer
+export const POST_api_link_customer = async ({ body }) => {
+  const { personId, customerId } = await body
+  const person = Person.get(personId)
+  const customer = Customer.get(customerId)
+  customer.update({ is: person })
+  // update matching payments
+  for (const payment of Payment.filter.by(customer)) {
+    payment.update({ by: person })
+  }
+}
+
+// POST /api/link/coworker
+export const POST_api_link_coworker = async ({ body }) => {
+  const { personId, coworkerId } = await body
+  // update matching visits
+  const person = Person.get(personId)
+  const coworker = Coworker.get(coworkerId)
+  coworker.update({ is: person })
+  // update matching payments
+  for (const visit of Visit.filter.by(coworker)) {
+    visit.update({ by: person })
+  }
 }
