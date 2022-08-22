@@ -95,11 +95,12 @@ h1 { text-align: center }
 .data > span.image { padding: 0 }
 .data > span.image:hover > img {
   height: unset;
+  width: unset;
   position: absolute;
   pointer-events: none;
 }
-.data > span.image > img { height: 4em }
-.data > span.image:not(.empty):hover { height: 4em }
+.data > span.image > img { height: 4em; width: 4em; }
+.data > span.image:not(.empty):hover { height: 4em; width: 4em; }
 
 .data > b {
   background: black;
@@ -405,15 +406,15 @@ const opClass = (entity, key, name) => entity && [...getAllRelated(entity)]
   .flatMap(e => e.elems)
   .forEach(elem => elem.classList[key](name))
 
-let previous
+let SELECTED_ENTITY
 const handleUpdateHash = () => {
   const selected = location.hash.split(/^#select-([0-9]+)$/)[1]
   const entity = ENTITY.get(Number(selected))
-  if (entity === previous) return
+  if (entity === SELECTED_ENTITY) return
   CONTENT.classList.toggle('has-selection', Boolean(entity))
   opClass(entity, 'add', 'selected')
-  opClass(previous, 'remove', 'selected')
-  previous = entity
+  opClass(SELECTED_ENTITY, 'remove', 'selected')
+  SELECTED_ENTITY = entity
   if (entity?.entityType === 'person') {
     userForm.parentElement.dataset.mode = 'edit'
     setUserInputs(entity)
@@ -606,6 +607,20 @@ const initialSorts = {
   payment: { name: 'at', order: 'desc' },
 }
 
+const formatPersonValues = data =>
+  Object.fromEntries(Object.entries(data)
+    .map(([k, v]) => {
+      try {
+        if (k === 'birth') return [k, new Date(v).getTime()]
+      } catch { return [k] }
+      // TODO: handle user referral
+      if (k === 'referral') return [k, typeof v === "number" ? v : referrals[v]]
+      if (k === 'name') return [k, v?.toLowerCase()]
+      return [k, v]
+    })
+    .filter(([,v]) => v))
+
+
 
 const referrals = {}
 const userForm = document.querySelector('form#user-inputs')
@@ -616,18 +631,7 @@ userForm.addEventListener('submit', async e => {
     data.link = data._id
     data._id = undefined
   }
-  const values = Object.fromEntries(Object.entries(data)
-    .map(([k, v]) => {
-      try {
-        if (k === 'birth') return [k, new Date(v).getTime()]
-      } catch { return [k] }
-      // TODO: handle user referral
-      if (k === 'referral') return [k, referrals[v]]
-      if (k === 'name') return [k, v?.toLowerCase()]
-      return [k, v]
-    })
-    .filter(([,v]) => v))
-
+  const values = formatPersonValues(data)
   const response = await fetch('/api/person', {
     method: 'POST',
     body: JSON.stringify(values)
@@ -655,9 +659,11 @@ const setUserInputs = (initialValues = {}) => {
   for (const [key, value] of Object.entries(initialValues)) {
     if (!userInputs[key]) continue
     if (key === 'referral') {
-      userInputs[key][value].checked = true
+      userInputs[key][referrals[value] || value].checked = true
     } else if (key === 'birth'){
-      userInputs[key].valueAsNumber = value
+      value
+        ? (userInputs[key].valueAsNumber = value)
+        : (userInputs[key].value = '')
     } else {
       userInputs[key].value = value
     }
@@ -684,8 +690,21 @@ const buildLinks = () => {
       link.append(icon, name)
       link.title = e._id
       link.classList.add('edit-only')
-      link.addEventListener('click', event => {
+      link.addEventListener('click', async event => {
         event.preventDefault()
+        if (!SELECTED_ENTITY) return // TODO: show error
+        link.disabled = true
+        const values = {
+          ...formatPersonValues(e),
+          ...formatPersonValues(SELECTED_ENTITY),
+          link: e._id,
+        }
+        const res = await fetch(`/api/person`, {
+          method: 'POST',
+          body: JSON.stringify(values)
+        })
+        res.ok && location.reload()
+        // TODO: handle errors
       })
 
       wrapper.append(create, link)
@@ -699,7 +718,10 @@ fetch('/api/all').then(r => r.json()).then(tables => {
   for (const [name, { definitions, values }] of Object.entries(tables)) {
     if (name === 'product') continue
     if (name === 'referral') {
-      for (const [id, key] of values) (referrals[key] = id)
+      for (const [id, key] of values) {
+        referrals[key] = id
+        referrals[id] = key
+      }
       continue
     }
     createTable({
