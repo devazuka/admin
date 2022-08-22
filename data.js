@@ -46,6 +46,7 @@ export const Person = defineEntity('person', {
   email: String,
   birth: Date,
   notes: String,
+  org: String,
   referral: Referral, // source OR person
 })
 

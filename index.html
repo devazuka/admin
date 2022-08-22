@@ -208,7 +208,7 @@ label { white-space: nowrap }
         <h4 class="edit-only">🗃️ Edit existing user</h4>
         <label class="text edit-only"><span>_id:</span><input name="_id" type="number" readonly></label>
         <label class="text"><span>Email:</span><input name="email" type="email"></label>
-        <label class="text"><span>Name:</span><input name="name"></label>
+        <label class="text"><span>Name:</span><input name="fullname"></label>
         <label class="text"><span>Image:</span><input name="image"></label>
         <label class="text"><span>Notes:</span><textarea name="notes"></textarea></label>
         <label class="text"><span>Birthday:</span><input name="birth" type="date"></label>
@@ -343,6 +343,18 @@ const specialColumns = {
   },
   refunded: { alias: '♻️' },
   disputed: { alias: '👩‍⚖️' },
+  birth: {
+    alias: 'age',
+    format(v) {
+      if (!v) return
+      const time = document.createElement('time')
+      const d = new Date(v)
+      const date = f2(d.getDate()) +'-'+ f2(d.getMonth()+1) +'-'+ f2(d.getFullYear())
+      time.title = (time.dateTime = `${date} 00:00:00`)
+      time.append(Math.floor((Date.now() - d.getTime()) / (1000*60*60*24*365)))
+      return time
+    }
+  },
   croissant: {
     alias: ' ',
     format(v) {
@@ -402,6 +414,12 @@ const handleUpdateHash = () => {
   opClass(entity, 'add', 'selected')
   opClass(previous, 'remove', 'selected')
   previous = entity
+  if (entity?.entityType === 'person') {
+    userForm.parentElement.dataset.mode = 'edit'
+    setUserInputs(entity)
+  } else {
+    userForm.parentElement.dataset.mode = 'create'
+  }
 }
 addEventListener('hashchange', handleUpdateHash)
 
@@ -455,9 +473,15 @@ const tableAliases = {
 const makeFilter = q => new Function(['data', 'i', 'all'], `with (data) { return ${q} }`)
 
 const birthInput = document.querySelector('input[name=birth]')
-birthInput.max = `${(new Date().getFullYear() - 13)}-01-01`
-birthInput.addEventListener('change', e => {
-  console.log(e.value)
+const yyyy = new Date().getFullYear()
+const mmdd = `${f2(new Date().getMonth()+1)}-${f2(new Date().getDay())}`
+birthInput.max = `${yyyy - 8}-${mmdd}`
+birthInput.min = `${yyyy - 88}-${mmdd}`
+birthInput.addEventListener('focus', e => {
+  e.target.value || (e.target.value = '1999-06-25')
+})
+birthInput.addEventListener('blur', e => {
+  e.target.value === '1999-06-25' && (e.target.value = '')
 })
 const createTable = (table, initialSort = {}) => {
   const wrapper = document.createElement('div')
@@ -583,22 +607,63 @@ const initialSorts = {
 }
 
 
-const form = document.querySelector('form#user-inputs')
-form.addEventListener('submit', e => {
+const referrals = {}
+const userForm = document.querySelector('form#user-inputs')
+userForm.addEventListener('submit', async e => {
   e.preventDefault()
   const data = Object.fromEntries(new FormData(e.target))
-  console.log(e.submitter.name, data)
-  switch (e.submitter.name) {
-    case 'add-user': {
-
-    }
+  if (e.submitter.name === 'add-user') {
+    data.link = data._id
+    data._id = undefined
   }
+  const values = Object.fromEntries(Object.entries(data)
+    .map(([k, v]) => {
+      try {
+        if (k === 'birth') return [k, new Date(v).getTime()]
+      } catch { return [k] }
+      // TODO: handle user referral
+      if (k === 'referral') return [k, referrals[v]]
+      if (k === 'name') return [k, v?.toLowerCase()]
+      return [k, v]
+    })
+    .filter(([,v]) => v))
+
+  const response = await fetch('/api/person', {
+    method: 'POST',
+    body: JSON.stringify(values)
+  })
+  response.ok && location.reload()
+  // TODO: show error if any !
 })
 
-const toLink = e => {
-  e._id
-  e.fullname
+const userInputsList = [...document.querySelectorAll('#user-inputs *[name]')].reverse()
+const userInputs = Object.fromEntries(userInputsList.map(i => [i.name, i]))
+userInputs.referral = Object.fromEntries(
+  userInputsList
+    .filter(i => i.name === 'referral')
+    .map(i => [i.value, i])
+)
+const setUserInputs = (initialValues = {}) => {
+  for (const input of userInputsList) {
+    if (initialValues[input.name]) continue
+    if (input.type === 'radio') {
+      input.checked = true
+    } else {
+      input.value = ''      
+    }
+  }
+  for (const [key, value] of Object.entries(initialValues)) {
+    if (!userInputs[key]) continue
+    if (key === 'referral') {
+      userInputs[key][value].checked = true
+    } else if (key === 'birth'){
+      userInputs[key].valueAsNumber = value
+    } else {
+      userInputs[key].value = value
+    }
+  }
 }
+
 const buildLinks = () => {
   const links = [...ENTITY.values()]
     .filter(e => !e.is && (e.entityType === 'client' || e.entityType === 'coworker'))
@@ -606,19 +671,21 @@ const buildLinks = () => {
       const wrapper = document.createElement('div')
       const create = document.createElement('button')
       const link = document.createElement('button')
-      const i = document.createElement('span')
       const name = e.fullname.replace(/\s+/g, '_')
-      i.append(icon, `${e._id}#`, name)
       const icon = e.entityType === 'client' ? '💳' : '🥐'
-      create.append(icon, i, name)
+      
+      create.append(icon, name)
+      create.title = e._id
       create.classList.add('create-only')
-      create.addEventListener('click', e => {
-        e.preventDefault()
+      create.addEventListener('click', event => {
+        event.preventDefault()
+        setUserInputs({ ...e, referral: icon === '🥐' ? 'croissant' : 'other' })
       })
-      link.append(icon, i, name)
+      link.append(icon, name)
+      link.title = e._id
       link.classList.add('edit-only')
-      link.addEventListener('click', e => {
-        e.preventDefault()
+      link.addEventListener('click', event => {
+        event.preventDefault()
       })
 
       wrapper.append(create, link)
@@ -628,11 +695,13 @@ const buildLinks = () => {
   document.querySelector('#add-links').append(...links)
 }
 
-
 fetch('/api/all').then(r => r.json()).then(tables => {
   for (const [name, { definitions, values }] of Object.entries(tables)) {
     if (name === 'product') continue
-    if (name === 'referral') continue
+    if (name === 'referral') {
+      for (const [id, key] of values) (referrals[key] = id)
+      continue
+    }
     createTable({
       name,
       columns: definitions,

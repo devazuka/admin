@@ -57,7 +57,7 @@ export const parseJSON = (res, callback) => {
   let acc = ''
   res.onData((chunk, isLast) => {
     acc += decode(chunk)
-    isLast && handleStripeWebhook(JSON.parse(acc))
+    isLast && callback(JSON.parse(acc))
   })
 }
 
