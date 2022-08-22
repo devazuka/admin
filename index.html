@@ -146,11 +146,7 @@ h2 {
   text-align: left;
 }
 
-#actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-evenly;
-}
+#actions { display: flex }
 
 #referral-group {
   display: inline-flex;
@@ -203,6 +199,17 @@ label { white-space: nowrap }
 #user-actions-bar { display: flex; gap: 0.5em }
 #active-visit {
   display: flex;
+  flex-wrap: wrap;
+}
+#active-visit .visit button:hover,
+#active-visit .visit button:focus,
+#active-visit .visit button:active { opacity: 1 }
+#active-visit .visit button {
+  position: absolute;
+  margin-left: 5em;
+  border-radius: 100%;
+  padding: 0.25em;
+  opacity: 0.25;
 }
 #active-visit .visit img {
   width: 4em;
@@ -273,10 +280,9 @@ label { white-space: nowrap }
         <!-- generate the list -->
       </div>
     </div>
-    <div>
-      <div>
-        <h3>⌛ Active Visits</h3>
-        <div id="active-visit">
+    <div style="flex-grow: 1">
+      <h3>⌛ Active Visits</h3>
+      <div id="active-visit">
           <!--
             generate the list
             with button to check-out for managed visit (not croissant)
@@ -285,7 +291,6 @@ label { white-space: nowrap }
             <button id="drink">🥤 drink</button>
           </div>
           -->
-        </div>
       </div>
     </div>
   </div>
@@ -728,10 +733,14 @@ const generateActivePersonList = () => {
     } else if (by?.entityType === 'person') {
       by.active = true
       img.src = by.image
-      name.append(by.fullname)
+      const a = document.createElement('a')
+      a.href = `#select-${by._id}`
+      a.append(by.fullname)
+      name.append(a)
       if (!visit.id) { // visit.id means it's managed by croissant
         const checkoutButton = document.createElement('button')
-        checkoutButton.append('❌ Check out')
+        checkoutButton.append('❌')
+        checkoutButton.title = 'checkout'
         checkoutButton.addEventListener('click', async e => {
           const res = await fetch('/api/checkout', {
             method: 'POST',
