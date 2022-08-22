@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 
 import { getById } from './atoms.js'
-import { Visit, Payment, Product, Referral, Person, Customer, Coworker } from "./data.js"
+import { Visit, Payment, Product, Referral, Person, Client, Coworker } from "./data.js"
 import { R } from './response.js'
 
 // GET /api/all
@@ -10,7 +10,7 @@ export const GET_api_all = async ({ params, session }) =>
     JSON.stringify({
       person: Person,
       coworker: Coworker,
-      customer: Customer,
+      client: Client,
       payment: Payment,
       visit: Visit,
       product: Product,
@@ -32,14 +32,14 @@ export const POST_api_person = async ({ body }) => {
   return person.update({ image: `https://robohash.org/${hash}` })
 }
 
-// POST /api/link/customer
-export const POST_api_link_customer = async ({ body }) => {
-  const { personId, customerId } = await body
+// POST /api/link/client
+export const POST_api_link_client = async ({ body }) => {
+  const { personId, clientId } = await body
   const person = Person.get(personId)
-  const customer = Customer.get(customerId)
-  customer.update({ is: person })
+  const client = Client.get(clientId)
+  client.update({ is: person })
   // update matching payments
-  for (const payment of Payment.filter.by(customer)) {
+  for (const payment of Payment.filter.by(client)) {
     payment.update({ by: person })
   }
 }

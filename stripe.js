@@ -1,7 +1,7 @@
 
 import S from 'stripe'
 import { STRIPE_SECRET, STRIPE_SIGNATURE } from './env.js'
-import { Customer, Payment, Product } from './data.js'
+import { Client, Payment, Product } from './data.js'
 
 const stripe = S(STRIPE_SECRET)
 
@@ -13,14 +13,14 @@ const loadAllCharges = async () => {
   for (const charge of data) {
     const email = charge.billing_details?.email || charge.receipt_email
     const at = charge.created * 1000
-    const customer = Customer.from.email(email, {
+    const client = Client.from.email(email, {
       email: email.toLowerCase(),
       fullname: charge.billing_details?.name?.toLowerCase(),
     }, at)
     if (charge.status !== 'succeeded') continue
     Payment.from.id(charge.id, {
       id: charge.id,
-      by: customer.is || customer,
+      by: client.is || client,
       at,
       amount: charge.amount,
       product: productByCost[charge.amount],

@@ -16,6 +16,7 @@ export const User = defineEntity('user', {
 
 export const Referral = defineEntity('referral', { id: String })
 export const {
+  croissant,
   instagram,
   linkedin,
   facebook,
@@ -57,7 +58,7 @@ export const Coworker = defineEntity('coworker', {
 })
 
 // From stripe
-export const Customer = defineEntity('customer', {
+export const Client = defineEntity('client', {
   email: String,
   fullname: String,
   // tax: String, // not sure where this is stored yet
@@ -67,14 +68,14 @@ export const Customer = defineEntity('customer', {
 export const Visit = defineEntity('visit', {
   id: String,
   at: Date,
-  by: Customer,
+  by: Client,
   end: Date,
   guest: String, // name of the guest
 })
 
 export const Payment = defineEntity('payment', {
   id: String, // stripe id (empty = cash)
-  by: Customer, // or person
+  by: Client, // or person
   at: Date,
   org: String, // DEVAZUKA | 01
   product: Product,

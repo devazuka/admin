@@ -28,8 +28,13 @@ body {
   margin: 0 auto;
 }
 
-body, span {
+body, span, button, input, textarea {
   font-family: 'Inconsolata', monospace;
+}
+
+button, input, textarea {
+  font-size: 1em;
+  padding: 0.25em 0.5em;
 }
 
 h1 { text-align: center }
@@ -54,6 +59,7 @@ h1 { text-align: center }
     #000;
 }
 
+.data > span.fullname, .data > span.guest { text-transform: capitalize }
 .data > span.Boolean:after { content: '✘' }
 .data > span.Boolean[data-val='true']:after { content: '✔' }
 .data > span.Boolean.sex:after { content: '⚧️' }
@@ -128,61 +134,95 @@ h2 {
   color: white;
   background: black;
 }
-form {
+
+#add-links {
+  display: grid;
+  grid-template-columns: max-content;
+  grid-gap: 0.25em;
+}
+#add-links button {
+  width: 100%;
+  text-align: left;
+}
+
+#actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-evenly;
 }
-#add-user .text > input, #add-user label > textarea {
+
+#referral-group {
+  display: inline-flex;
+  align-items: baseline;
+}
+
+#user-inputs .text > input, #user-inputs label > textarea {
   flex-grow: 1;
   margin: 0.5em 0.25em;
 }
-#add-user .text:focus-within > span {
+#user-inputs .text:focus-within > span {
   background: #70f;
 }
 .text div label { display: block; }
 label { white-space: nowrap }
-#add-user .text > span {
+#user-inputs .text > span {
   flex-shrink: 0;
   width: 5em;
   text-align: right;
   color: white;
   background: black;
-  padding: 0.5em 0.25em;
+  padding: 0 0.25em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: end;
 }
-#add-user .text {
+#user-inputs .text {
   display: flex;
   flex-direction: row;
 }
-#add-user {
+#user-inputs button {
+  margin: 0.5em 0 0 auto;
+  white-space: nowrap;
+  width: fit-content;
+  flex-grow: 0;
+  flex-shrink: 1;
+}
+#user-inputs {
   display: flex;
   flex-direction: column;
 }
+#user-actions[data-mode=create] .create-only { display: inherit; }
+#user-actions[data-mode=create] .edit-only { display: none }
+#user-actions[data-mode=edit] .create-only { display: none }
+#user-actions[data-mode=edit] .edit-only { display: inherit; }
 </style>
 </head>
 <body>
   <h1>Admin</h1>
   <h2>Actions</h2>
-  <form>
-    <div>
+  <div id="actions">
+    <div id="user-actions" data-mode="create">
       <h3>👨‍💻 Users 👩‍💻</h3>
-      <div id="add-user">
-        <h4>🗃️ Register new user</h4>
+      <form id="user-inputs">
+        <h4 class="create-only">🗃️ Register new user</h4>
+        <h4 class="edit-only">🗃️ Edit existing user</h4>
+        <label class="text edit-only"><span>_id:</span><input name="_id" type="number" readonly></label>
         <label class="text"><span>Email:</span><input name="email" type="email"></label>
         <label class="text"><span>Name:</span><input name="name"></label>
         <label class="text"><span>Image:</span><input name="image"></label>
         <label class="text"><span>Notes:</span><textarea name="notes"></textarea></label>
         <label class="text"><span>Birthday:</span><input name="birth" type="date"></label>
-        <div class="text">
-          <span>Org:</span>
-          <label><input type="radio" name="org" value="" checked>None</label>
-          <label><input type="radio" name="org" value="01">01</label>
+        <div class="text" style="display: flex; align-items: center">
+          <span style="padding-top: 0.5em; padding-bottom: 0.5em;">Org:</span>
+          <label style="margin-right: 0.5em"><input type="radio" name="org" value="" checked>None</label>
+          <label style="margin-right: 0.5em"><input type="radio" name="org" value="01">01</label>
           <label><input type="radio" name="org" value="devazuka">DEVAZUKA</label>
         </div>
         <div class="text">
           <span>Referral:</span>
           <div>
             <label><input type="radio" name="referral" value="other" checked>Other</label>
+            <label><input type="radio" name="referral" value="croissant">Croissant</label>
             <label><input type="radio" name="referral" value="instagram">Instagram</label>
             <label><input type="radio" name="referral" value="linkedin">Linkedin</label>
             <label><input type="radio" name="referral" value="facebook">Facebook</label>
@@ -196,38 +236,38 @@ label { white-space: nowrap }
             </div>
           </div>
         </div>
-        <button>⬆️ Create</button>
-      </div>
-      <div id="payment-link">
-        <h4>💳 Link Payments</h4>
-        <!-- generate the list -->
-      </div>
-      <div id="visit-link">
-        <h4>🥐 Link Visits</h4>
+        <button name="add-user" class="create-only">⬆️ Create</button>
+        <button name="update-user" class="edit-only">⬆️ Save changes</button>
+      </form>
+      <div id="add-links">
+        <h4 class="edit-only">🔗 Link with</h4>
+        <h4 class="create-only">📂 Create from</h4>
         <!-- generate the list -->
       </div>
     </div>
     <div>
-      <h3>⌛ Active Visits</h3>
-      <div id="active-visit">
-        <!--
-          generate the list
-          with button to check-out for managed visit (not croissant)
-        <div>
-          <button id="check-out">❌ check out</button>
-          <button id="drink">🥤 drink</button>
-          <button id="day_pass">🕑 day pass</button>
-          <button id="month_pass">🗓️ monthly pass</button>
+      <div>
+        <h3>⌛ Active Visits</h3>
+        <div id="active-visit">
+          <!--
+            generate the list
+            with button to check-out for managed visit (not croissant)
+          <div>
+            <button id="check-out">❌ check out</button>
+            <button id="drink">🥤 drink</button>
+            <button id="day_pass">🕑 day pass</button>
+            <button id="month_pass">🗓️ monthly pass</button>
+          </div>
+          -->
         </div>
-        -->
+      </div>
+      <div>
+        <h3>🛂 Check-in</h3>
+        <label><span>Person:</span><input name="visit-person" class="person-input"></label>
+        <button id="check-in">▶️ check in</button>
       </div>
     </div>
-    <div>
-      <h3>🛂 Check-in</h3>
-      <label><span>Person:</span><input name="visit-person" class="person-input"></label>
-      <button id="check-in">▶️ check in</button>
-    </div>
-  </form>
+  </div>
   <h2>Data</h2>
   <main></main>
   <script>
@@ -281,25 +321,9 @@ const formatTime = (start, end) => {
   return elem
 }
 const columnTypeDefs = {
-  Date: {
-    format: ts => formatTime(ts),
-  },
-  String: {
-    format: (s, name) => {
-      if (!s) return
-      if (name !== 'image') return s
-      const img = document.createElement('img')
-      img.src = s
-      return img
-    }
-  },
-  Number: {
-    format: (n, name) => {
-      if (n == null) return
-      if (name === 'amount') return `${(n / 100).toFixed(2)}€`
-      return String(n)
-    },
-  },
+  Date: { format: ts => formatTime(ts) },
+  String: { format: (s, name) => s == null ? undefined : String(s) },
+  Number: { format: n => n == null ? undefined : String(n) },
   Boolean: { format: v => '', width: '2em' },
   JSON: { format: JSON.stringify },
 }
@@ -419,14 +443,29 @@ const prepareColumn = ([name, type], index) => {
   return { width: 'min-content', type, index, name, ...def }
 }
 
+const tableAliases = {
+  coworker: '🥐 Croissant',
+  client: '💳 Stripe',
+  payment: '💰 Payments',
+  person: '👥 Persons',
+  visit: '🗺️ Visits'
+}
+
 // TODO: add filter
 const makeFilter = q => new Function(['data', 'i', 'all'], `with (data) { return ${q} }`)
+
+const birthInput = document.querySelector('input[name=birth]')
+birthInput.max = `${(new Date().getFullYear() - 13)}-01-01`
+birthInput.addEventListener('change', e => {
+  console.log(e.value)
+})
 const createTable = (table, initialSort = {}) => {
   const wrapper = document.createElement('div')
   const title = document.createElement('h3')
   const div = document.createElement('div')
-  wrapper.id = table.name
-  title.append(table.name)
+  const entityType = table.name
+  wrapper.id = entityType
+  title.append(tableAliases[entityType] || entityType)
   wrapper.append(title, div)
   div.classList.add('data')
 
@@ -468,22 +507,22 @@ const createTable = (table, initialSort = {}) => {
     col = -1
     const relateTo = new Set()
     const rowSpans = Array(size)
-    const rowData = { elems: rowSpans, relateTo }
+    const _id = data[0]
+    const rowData = { _id, entityType, elems: rowSpans, relateTo }
     unsortedData[row] = rowData
-    const id = data[0]
-    ENTITY.set(id, rowData)
+    ENTITY.set(_id, rowData)
     while (++col < size) {
       const { name, format, type, isRef, hidden } = columns[col]
       const span = document.createElement('span')
       const val = data[col]
       isRef && relateTo.add(val)
-      span.id = col ? `${name}-${id}` : id
+      span.id = col ? `${name}-${_id}` : _id
       span.classList.add(name, type)
       span.classList.toggle('hidden', Boolean(hidden))
       span.dataset.val = val
       span.dataset.row = row
       span.dataset.col = col
-      span.dataset.id = id
+      span.dataset.id = _id
       const formatted = format(val, name, type, rowData)
       formatted == null
         ? span.classList.add('empty')
@@ -536,12 +575,59 @@ const buildRelation = () => {
 }
 
 const initialSorts = {
-  customer: { name: 'fullname', order: 'asc' },
+  client: { name: 'fullname', order: 'asc' },
   coworker: { name: 'fullname', order: 'asc' },
   person: { name: 'fullname', order: 'asc' },
   visit: { name: 'at', order: 'desc' },
   payment: { name: 'at', order: 'desc' },
 }
+
+
+const form = document.querySelector('form#user-inputs')
+form.addEventListener('submit', e => {
+  e.preventDefault()
+  const data = Object.fromEntries(new FormData(e.target))
+  console.log(e.submitter.name, data)
+  switch (e.submitter.name) {
+    case 'add-user': {
+
+    }
+  }
+})
+
+const toLink = e => {
+  e._id
+  e.fullname
+}
+const buildLinks = () => {
+  const links = [...ENTITY.values()]
+    .filter(e => !e.is && (e.entityType === 'client' || e.entityType === 'coworker'))
+    .map(e => {
+      const wrapper = document.createElement('div')
+      const create = document.createElement('button')
+      const link = document.createElement('button')
+      const i = document.createElement('span')
+      const name = e.fullname.replace(/\s+/g, '_')
+      i.append(icon, `${e._id}#`, name)
+      const icon = e.entityType === 'client' ? '💳' : '🥐'
+      create.append(icon, i, name)
+      create.classList.add('create-only')
+      create.addEventListener('click', e => {
+        e.preventDefault()
+      })
+      link.append(icon, i, name)
+      link.classList.add('edit-only')
+      link.addEventListener('click', e => {
+        e.preventDefault()
+      })
+
+      wrapper.append(create, link)
+      return wrapper
+    })
+
+  document.querySelector('#add-links').append(...links)
+}
+
 
 fetch('/api/all').then(r => r.json()).then(tables => {
   for (const [name, { definitions, values }] of Object.entries(tables)) {
@@ -555,6 +641,7 @@ fetch('/api/all').then(r => r.json()).then(tables => {
   }
   buildRelation()
   handleUpdateHash()
+  buildLinks()
 })
 
   </script>
