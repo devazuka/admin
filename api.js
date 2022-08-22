@@ -48,6 +48,17 @@ export const POST_api_person = async ({ body }) => {
   person.update({ image: `https://robohash.org/${hash}` })
 }
 
+// POST /api/checkin
+export const POST_api_checkin = async ({ body }) => {
+  const { by } = await body
+  Visit({ at: Date.now(), by: Person.get(by) })
+}
+
+// POST /api/checkout
+export const POST_api_checkout = async ({ body }) => {
+  const { id } = await body
+  Visit.get(id).update({ end: Date.now() })
+}
 // POST /api/link/client
 export const POST_api_link_client = async ({ body }) => {
   const { personId, clientId } = await body

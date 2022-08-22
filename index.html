@@ -192,10 +192,32 @@ label { white-space: nowrap }
   display: flex;
   flex-direction: column;
 }
-#user-actions[data-mode=create] .create-only { display: inherit; }
+#user-actions[data-mode=create] .create-only { display: inherit }
 #user-actions[data-mode=create] .edit-only { display: none }
 #user-actions[data-mode=edit] .create-only { display: none }
-#user-actions[data-mode=edit] .edit-only { display: inherit; }
+#user-actions[data-mode=edit] .edit-only { display: inherit }
+#user-actions[data-status=inactive] .active-only { display: none }
+#user-actions[data-status=inactive] .active-only { display: inherit }
+#user-actions[data-status=active] .inactive-only { display: inherit }
+#user-actions[data-status=active] .inactive-only { display: none }
+#user-actions-bar { display: flex; gap: 0.5em }
+#active-visit {
+  display: flex;
+}
+#active-visit .visit img {
+  width: 4em;
+  height: 4em;
+  border-radius: 50%;
+}
+#active-visit .visit span {
+  text-transform: capitalize;
+}
+#active-visit .visit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1em;
+}
 </style>
 </head>
 <body>
@@ -237,8 +259,13 @@ label { white-space: nowrap }
             </div>
           </div>
         </div>
-        <button name="add-user" class="create-only">⬆️ Create</button>
-        <button name="update-user" class="edit-only">⬆️ Save changes</button>
+        <div id="user-actions-bar">
+          <button name="day_pass" type="button" class="edit-only">🕑 1 Day</button>
+          <button name="month_pass" type="button" class="edit-only">🗓️ 30 Day</button>
+          <button name="check-in" type="button" class="edit-only inactive-only">🛂 Check-in</button>
+          <button name="add-user" class="create-only">⬆️ Create</button>
+          <button name="update-user" class="edit-only">⬆️ Save changes</button>
+        </div>
       </form>
       <div id="add-links">
         <h4 class="edit-only">🔗 Link with</h4>
@@ -256,16 +283,9 @@ label { white-space: nowrap }
           <div>
             <button id="check-out">❌ check out</button>
             <button id="drink">🥤 drink</button>
-            <button id="day_pass">🕑 day pass</button>
-            <button id="month_pass">🗓️ monthly pass</button>
           </div>
           -->
         </div>
-      </div>
-      <div>
-        <h3>🛂 Check-in</h3>
-        <label><span>Person:</span><input name="visit-person" class="person-input"></label>
-        <button id="check-in">▶️ check in</button>
       </div>
     </div>
   </div>
@@ -415,11 +435,14 @@ const handleUpdateHash = () => {
   opClass(entity, 'add', 'selected')
   opClass(SELECTED_ENTITY, 'remove', 'selected')
   SELECTED_ENTITY = entity
+  const { dataset } = userForm.parentElement
   if (entity?.entityType === 'person') {
-    userForm.parentElement.dataset.mode = 'edit'
+    dataset.mode = 'edit'
+    dataset.status = entity.active ? 'active' : 'inactive'
     setUserInputs(entity)
   } else {
-    userForm.parentElement.dataset.mode = 'create'
+    dataset.mode = 'create'
+    dataset.status = 'inactive'
   }
 }
 addEventListener('hashchange', handleUpdateHash)
@@ -624,6 +647,17 @@ const formatPersonValues = data =>
 
 const referrals = {}
 const userForm = document.querySelector('form#user-inputs')
+const checkinButton = document.querySelector('button[name=check-in]')
+checkinButton.addEventListener('click', async e => {
+  e.preventDefault()
+  if (SELECTED_ENTITY?.entityType !== 'person') return
+  const res = await fetch('/api/checkin', {
+    method: 'POST',
+    body: JSON.stringify({ by: SELECTED_ENTITY._id })
+  })
+  res.ok && location.reload()
+})
+
 userForm.addEventListener('submit', async e => {
   e.preventDefault()
   const data = Object.fromEntries(new FormData(e.target))
@@ -668,6 +702,52 @@ const setUserInputs = (initialValues = {}) => {
       userInputs[key].value = value
     }
   }
+}
+
+const generateActivePersonList = () => {
+  const activeVisits = [...ENTITY.values()]
+    .filter(e => e.entityType === 'visit')
+    .filter(e => !e.end)
+
+  const visitElements = []
+  for (const visit of activeVisits) {
+    const by = ENTITY.get(visit.by)
+    const wrapper = document.createElement('div')
+    const name = document.createElement('span')
+    wrapper.classList.add('visit')
+    const img = document.createElement('img')
+    wrapper.append(img, name)
+    if (visit.guest) {
+      // croissant guest mode
+      img.src = `https://robohash.org/${encodeURIComponent(visit.guest)}`
+      name.append(visit.guest)
+    } else if (by?.entityType === 'coworker') {
+      // croissant account unlinked yet
+      img.src = by.image || `https://robohash.org/${encodeURIComponent(by.fullname)}`
+      name.append(by.fullname)
+    } else if (by?.entityType === 'person') {
+      by.active = true
+      img.src = by.image
+      name.append(by.fullname)
+      if (!visit.id) { // visit.id means it's managed by croissant
+        const checkoutButton = document.createElement('button')
+        checkoutButton.append('❌ Check out')
+        checkoutButton.addEventListener('click', async e => {
+          const res = await fetch('/api/checkout', {
+            method: 'POST',
+            body: JSON.stringify({ id: visit._id })
+          })
+          res.ok && location.reload()
+        })
+        wrapper.append(checkoutButton)
+      }
+    }
+    visitElements.push(wrapper)
+  }
+
+  document
+    .querySelector('#active-visit')
+    .append(...visitElements)
 }
 
 const buildLinks = () => {
@@ -730,6 +810,7 @@ fetch('/api/all').then(r => r.json()).then(tables => {
       data: values,
     }, initialSorts[name])
   }
+  generateActivePersonList()
   buildRelation()
   handleUpdateHash()
   buildLinks()
