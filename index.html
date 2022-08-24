@@ -360,10 +360,8 @@ const generatePattern = seed => {
   const rand = randomSeed(seed)
   const type = parts.types[~~(rand()*parts.types.length)]
   const size = parts.sizes[~~(rand()*parts.sizes.length)]
-  const hue = rand()*270
-  const satFg = rand()*50
-  const satBg = rand()*100
-  const fg = `hsl(${hue}, 70%, 90%)`
+  const hue = rand()*360
+  const fg = `hsl(${hue+90}, 70%, 90%)`
   const bg = `hsl(${hue}, 60%, 70%)`
   return { class: `p-${type}-${size}`, color: fg, backgroundColor: bg }
 }
