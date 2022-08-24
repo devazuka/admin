@@ -6,6 +6,57 @@
   <link rel="icon" href="data:image/svg+xml,<svg viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'><path fill='%23fff' stroke='%23888' d='M39,1L20.5,11L20.5,39L39,29Z'/><path fill='%23888' stroke='%23fff' d='M1,1L19.5,11L19.5,39L1,29Z'/></svg>">
   <title>Admin</title>
 <style>
+/* css patterns */
+.p-checks-sm{background-image:repeating-linear-gradient(45deg, currentColor 25%, transparent 25%, transparent 75%, currentColor 75%, currentColor),repeating-linear-gradient(45deg, currentColor 25%, transparent 25%, transparent 75%, currentColor 75%, currentColor);background-position:0 0,10px 10px;background-size:calc(2 * 10px) calc(2 * 10px)}
+.p-checks-md{background-image:repeating-linear-gradient(45deg, currentColor 25%, transparent 25%, transparent 75%, currentColor 75%, currentColor),repeating-linear-gradient(45deg, currentColor 25%, transparent 25%, transparent 75%, currentColor 75%, currentColor);background-position:0 0,25px 25px;background-size:calc(2 * 25px) calc(2 * 25px)}
+.p-checks-lg{background-image:repeating-linear-gradient(45deg, currentColor 25%, transparent 25%, transparent 75%, currentColor 75%, currentColor),repeating-linear-gradient(45deg, currentColor 25%, transparent 25%, transparent 75%, currentColor 75%, currentColor);background-position:0 0,50px 50px;background-size:calc(2 * 50px) calc(2 * 50px)}
+.p-checks-xl{background-image:repeating-linear-gradient(45deg, currentColor 25%, transparent 25%, transparent 75%, currentColor 75%, currentColor),repeating-linear-gradient(45deg, currentColor 25%, transparent 25%, transparent 75%, currentColor 75%, currentColor);background-position:0 0,100px 100px;background-size:calc(2 * 100px) calc(2 * 100px)}
+.p-grid-sm{background-image:linear-gradient(currentColor 1px, transparent 1px),linear-gradient(to right, currentColor 1px, transparent 1px);background-size:10px 10px}
+.p-grid-md{background-image:linear-gradient(currentColor 1px, transparent 1px),linear-gradient(to right, currentColor 1px, transparent 1px);background-size:25px 25px}
+.p-grid-lg{background-image:linear-gradient(currentColor 1px, transparent 1px),linear-gradient(to right, currentColor 1px, transparent 1px);background-size:50px 50px}
+.p-grid-xl{background-image:linear-gradient(currentColor 1px, transparent 1px),linear-gradient(to right, currentColor 1px, transparent 1px);background-size:100px 100px}
+.p-dots-sm{background-image:radial-gradient(currentColor .5px, transparent .5px);background-size:calc(10 * .5px) calc(10 * .5px)}
+.p-dots-md{background-image:radial-gradient(currentColor 1px, transparent 1px);background-size:calc(10 * 1px) calc(10 * 1px)}
+.p-dots-lg{background-image:radial-gradient(currentColor 1.5px, transparent 1.5px);background-size:calc(10 * 1.5px) calc(10 * 1.5px)}
+.p-dots-xl{background-image:radial-gradient(currentColor 2px, transparent 2px);background-size:calc(10 * 2px) calc(10 * 2px)}
+.p-cross-dots-sm{background-image:radial-gradient(currentColor .5px, transparent .5px),radial-gradient(currentColor .5px, transparent .5px);background-size:calc(20 * .5px) calc(20 * .5px);background-position:0 0,calc(10 * .5px) calc(10 * .5px)}
+.p-cross-dots-md{background-image:radial-gradient(currentColor 1px, transparent 1px),radial-gradient(currentColor 1px, transparent 1px);background-size:calc(20 * 1px) calc(20 * 1px);background-position:0 0,calc(10 * 1px) calc(10 * 1px)}
+.p-cross-dots-lg{background-image:radial-gradient(currentColor 1.5px, transparent 1.5px),radial-gradient(currentColor 1.5px, transparent 1.5px);background-size:calc(20 * 1.5px) calc(20 * 1.5px);background-position:0 0,calc(10 * 1.5px) calc(10 * 1.5px)}
+.p-cross-dots-xl{background-image:radial-gradient(currentColor 2px, transparent 2px),radial-gradient(currentColor 2px, transparent 2px);background-size:calc(20 * 2px) calc(20 * 2px);background-position:0 0,calc(10 * 2px) calc(10 * 2px)}
+.p-vertical-lines-sm{background-image:repeating-linear-gradient(to right, currentColor, currentColor 1px, transparent 1px, transparent);background-size:10px 10px}
+.p-horizontal-lines-sm{background-image:repeating-linear-gradient(0deg, currentColor, currentColor 1px, transparent 1px, transparent);background-size:10px 10px}
+.p-diagonal-lines-sm{background-image:repeating-linear-gradient(45deg, currentColor 0, currentColor 1px, transparent 0, transparent 50%);background-size:10px 10px}
+.p-vertical-lines-md{background-image:repeating-linear-gradient(to right, currentColor, currentColor 1px, transparent 1px, transparent);background-size:25px 25px}
+.p-horizontal-lines-md{background-image:repeating-linear-gradient(0deg, currentColor, currentColor 1px, transparent 1px, transparent);background-size:25px 25px}
+.p-diagonal-lines-md{background-image:repeating-linear-gradient(45deg, currentColor 0, currentColor 1px, transparent 0, transparent 50%);background-size:25px 25px}
+.p-vertical-lines-lg{background-image:repeating-linear-gradient(to right, currentColor, currentColor 1px, transparent 1px, transparent);background-size:50px 50px}
+.p-horizontal-lines-lg{background-image:repeating-linear-gradient(0deg, currentColor, currentColor 1px, transparent 1px, transparent);background-size:50px 50px}
+.p-diagonal-lines-lg{background-image:repeating-linear-gradient(45deg, currentColor 0, currentColor 1px, transparent 0, transparent 50%);background-size:50px 50px}
+.p-vertical-lines-xl{background-image:repeating-linear-gradient(to right, currentColor, currentColor 1px, transparent 1px, transparent);background-size:100px 100px}
+.p-horizontal-lines-xl{background-image:repeating-linear-gradient(0deg, currentColor, currentColor 1px, transparent 1px, transparent);background-size:100px 100px}
+.p-diagonal-lines-xl{background-image:repeating-linear-gradient(45deg, currentColor 0, currentColor 1px, transparent 0, transparent 50%);background-size:100px 100px}
+.p-vertical-stripes-sm{background-image:linear-gradient(90deg, transparent 50%, currentColor 50%);background-size:10px 10px}
+.p-horizontal-stripes-sm{background-image:linear-gradient(0deg, transparent 50%, currentColor 50%);background-size:10px 10px}
+.p-diagonal-stripes-sm{background:repeating-linear-gradient(45deg, transparent, transparent 10px, currentColor 10px, currentColor calc(2 * 10px))}
+.p-vertical-stripes-md{background-image:linear-gradient(90deg, transparent 50%, currentColor 50%);background-size:25px 25px}
+.p-horizontal-stripes-md{background-image:linear-gradient(0deg, transparent 50%, currentColor 50%);background-size:25px 25px}
+.p-diagonal-stripes-md{background:repeating-linear-gradient(45deg, transparent, transparent 25px, currentColor 25px, currentColor calc(2 * 25px))}
+.p-vertical-stripes-lg{background-image:linear-gradient(90deg, transparent 50%, currentColor 50%);background-size:50px 50px}
+.p-horizontal-stripes-lg{background-image:linear-gradient(0deg, transparent 50%, currentColor 50%);background-size:50px 50px}
+.p-diagonal-stripes-lg{background:repeating-linear-gradient(45deg, transparent, transparent 50px, currentColor 50px, currentColor calc(2 * 50px))}
+.p-vertical-stripes-xl{background-image:linear-gradient(90deg, transparent 50%, currentColor 50%);background-size:100px 100px}
+.p-horizontal-stripes-xl{background-image:linear-gradient(0deg, transparent 50%, currentColor 50%);background-size:100px 100px}
+.p-diagonal-stripes-xl{background:repeating-linear-gradient(45deg, transparent, transparent 100px, currentColor 100px, currentColor calc(2 * 100px))}
+.p-zigzag-sm{background:linear-gradient(135deg, currentColor 25%, transparent 25%) -10px 0,linear-gradient(225deg, currentColor 25%, transparent 25%) -10px 0,linear-gradient(315deg, currentColor 25%, transparent 25%),linear-gradient(45deg, currentColor 25%, transparent 25%);background-size:calc(2 * 10px) calc(2 * 10px)}
+.p-zigzag-md{background:linear-gradient(135deg, currentColor 25%, transparent 25%) -25px 0,linear-gradient(225deg, currentColor 25%, transparent 25%) -25px 0,linear-gradient(315deg, currentColor 25%, transparent 25%),linear-gradient(45deg, currentColor 25%, transparent 25%);background-size:calc(2 * 25px) calc(2 * 25px)}
+.p-zigzag-lg{background:linear-gradient(135deg, currentColor 25%, transparent 25%) -50px 0,linear-gradient(225deg, currentColor 25%, transparent 25%) -50px 0,linear-gradient(315deg, currentColor 25%, transparent 25%),linear-gradient(45deg, currentColor 25%, transparent 25%);background-size:calc(2 * 50px) calc(2 * 50px)}
+.p-zigzag-xl{background:linear-gradient(135deg, currentColor 25%, transparent 25%) -100px 0,linear-gradient(225deg, currentColor 25%, transparent 25%) -100px 0,linear-gradient(315deg, currentColor 25%, transparent 25%),linear-gradient(45deg, currentColor 25%, transparent 25%);background-size:calc(2 * 100px) calc(2 * 100px)}
+.p-triangles-sm{background-image:linear-gradient(45deg, currentColor 50%, transparent 50%);background-size:10px 10px}
+.p-triangles-md{background-image:linear-gradient(45deg, currentColor 50%, transparent 50%);background-size:25px 25px}
+.p-triangles-lg{background-image:linear-gradient(45deg, currentColor 50%, transparent 50%);background-size:50px 50px}
+.p-triangles-xl{background-image:linear-gradient(45deg, currentColor 50%, transparent 50%);background-size:100px 100px}
+</style>
+<style>
 /* latin */
 @font-face {
   font-family: 'Inconsolata';
@@ -283,14 +334,14 @@ label { white-space: nowrap }
     <div style="flex-grow: 1">
       <h3>⌛ Active Visits</h3>
       <div id="active-visit">
-          <!--
-            generate the list
-            with button to check-out for managed visit (not croissant)
-          <div>
-            <button id="check-out">❌ check out</button>
-            <button id="drink">🥤 drink</button>
-          </div>
-          -->
+        <!--
+          generate the list
+          with button to check-out for managed visit (not croissant)
+        <div>
+          <button id="check-out">❌ check out</button>
+          <button id="drink">🥤 drink</button>
+        </div>
+        -->
       </div>
     </div>
   </div>
@@ -298,6 +349,24 @@ label { white-space: nowrap }
   <main></main>
   <script>
 const CONTENT = document.querySelector('main')
+
+const randomSeed = ((r,a,n)=>(d,o,m,i,z,e,x)=>(o=n(3941471299,d),m=a(0.8633289230056107-(o>>>0)*r),i=a(0.15019597788341343-(o=n(o,d)>>>0)*r),z=a(0.9176952994894236-(o=n(o,d)>>>0)*r),e=1,()=>(x=2091639*m+e*r,m=i,i=z,z=x-(e=x|0))))(23283064365386963e-26,e=>e+(e<0),(e,r)=>{for(let t of r){let r=.02519603282416938*(e+=t.charCodeAt());r-=e=r>>>0,r*=e,r-=e=r>>>0,e+=4294967296*r}return e})
+const parts = {
+  types: ['checks', 'grid', 'dots', 'cross-dots', 'diagonal-lines', 'horizontal-lines', 'vertical-lines', 'diagonal-stripes', 'horizontal-lines', 'vertical-stripes', 'triangles', 'zigzag'],
+  sizes: ['sm', 'md', 'lg', 'xl'],
+}
+
+const generatePattern = seed => {
+  const rand = randomSeed(seed)
+  const type = parts.types[~~(rand()*parts.types.length)]
+  const size = parts.sizes[~~(rand()*parts.sizes.length)]
+  const hue = rand()*270
+  const satFg = rand()*50
+  const satBg = rand()*100
+  const fg = `hsl(${hue}, 70%, 90%)`
+  const bg = `hsl(${hue}, 60%, 70%)`
+  return { class: `p-${type}-${size}`, color: fg, backgroundColor: bg }
+}
 
 const f2 = n => n < 10 ? ('0'+n) : n
 const units = [
@@ -358,7 +427,11 @@ const specialColumns = {
   image: {
     format(src) {
       if (!src) return
+      const pattern = generatePattern(src)
       const img = document.createElement('img')
+      img.style.color = pattern.color
+      img.style.backgroundColor = pattern.backgroundColor
+      img.classList.add(pattern.class)
       img.src = src
       return img
     },
@@ -721,18 +794,17 @@ const generateActivePersonList = () => {
     const name = document.createElement('span')
     wrapper.classList.add('visit')
     const img = document.createElement('img')
-    wrapper.append(img, name)
     if (visit.guest) {
       // croissant guest mode
-      img.src = `https://robohash.org/${encodeURIComponent(visit.guest)}`
+      wrapper.append(specialColumns.image.format(`https://robohash.org/${encodeURIComponent(visit.guest)}`))
       name.append(visit.guest)
     } else if (by?.entityType === 'coworker') {
       // croissant account unlinked yet
-      img.src = by.image || `https://robohash.org/${encodeURIComponent(by.fullname)}`
+      wrapper.append(specialColumns.image.format(by.image || `https://robohash.org/${encodeURIComponent(by.fullname)}`))
       name.append(by.fullname)
     } else if (by?.entityType === 'person') {
       by.active = true
-      img.src = by.image
+      wrapper.append(specialColumns.image.format(by.image))
       const a = document.createElement('a')
       a.href = `#select-${by._id}`
       a.append(by.fullname)
@@ -751,6 +823,7 @@ const generateActivePersonList = () => {
         wrapper.append(checkoutButton)
       }
     }
+    wrapper.append(name)
     visitElements.push(wrapper)
   }
 
