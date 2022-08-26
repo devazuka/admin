@@ -51,8 +51,11 @@ const refreshToken = async () => {
 // Update every minutes (working hours)
 let lastUpdate
 const refreshVisits = async (limit = 10) => {
-  const now = Date.now()
-  // TODO: skip refresh outside of work hours
+  // TODO: only check when active sessions ?
+  const time = new Date()
+  const hours = time.getUTCHours()
+  if (hours > 22 || hours < 8) return
+  const now = time.getTime()
   try {
     const { visits } = await usages({ limit, skip: 0 })
     lastUpdate = now
@@ -82,10 +85,10 @@ const refreshVisits = async (limit = 10) => {
         })
       }
     }
-    console.log('visits refreshed')
+    console.log('visits refreshed', time)
   } catch (err) {
     console.log(err)
-    console.log('unable to refresh visits')
+    console.log('unable to refresh visits', time)
   }
   setTimeout(refreshVisits, 1*MIN)
 }
