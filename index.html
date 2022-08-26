@@ -421,6 +421,7 @@ const columnTypeDefs = {
   JSON: { format: JSON.stringify },
 }
 
+const statusEmoji = { succeeded: '🟢', pending: '🟡', failed: '🔴' }
 const specialColumns = {
   image: {
     format(src) {
@@ -482,7 +483,15 @@ const specialColumns = {
   tax: { hidden: true },
   type: { hidden: true },
   // product: { hidden: true },
-  status: { hidden: true },
+  status: {
+    alias: 'ok?',
+    format(v) {
+      const span = document.createElement('span')
+      span.append(statusEmoji[v])
+      span.title = v
+      return span
+    }
+  },
   alias: { hidden: true },
   // id: { hidden: true },
 }
@@ -599,6 +608,7 @@ const createTable = (table, initialSort = {}) => {
   let sorts = initialSort
   for (const { name, type, alias, hidden } of columns) {
     const b = document.createElement('b')
+    b.title = name
     b.classList.add(name, type)
     b.classList.toggle('hidden', Boolean(hidden))
     b.append(alias || name)

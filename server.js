@@ -53,11 +53,11 @@ const getSession = req => {
 }
 
 const decode = new TextDecoder().decode.bind(new TextDecoder())
-export const parseJSON = (res, callback) => {
+export const collectBody = (res, callback) => {
   let acc = ''
   res.onData((chunk, isLast) => {
     acc += decode(chunk)
-    isLast && callback(JSON.parse(acc))
+    isLast && callback(acc)
   })
 }
 
@@ -77,10 +77,11 @@ const handle = action => async (res, req) => {
     signal,
     req,
     res,
+    get json() { return this.body.then(JSON.parse) },
     get body() {
       return body || (body = new Promise((s, f) => {
         signal.addEventListener('aborted', () => f(emptyResponse))
-        parseJSON(res, s)
+        collectBody(res, s)
       }))
     }
   })

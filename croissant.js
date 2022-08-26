@@ -82,6 +82,7 @@ const refreshVisits = async (limit = 10) => {
         })
       }
     }
+    console.log('visits refreshed')
   } catch (err) {
     console.log(err)
     console.log('unable to refresh visits')

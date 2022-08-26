@@ -24,6 +24,7 @@ export const {
   tiktok,
   google,
   other,
+  print, // flyers, poster, street art
   map,
 } = new Proxy({}, { get: (_, id) => Referral.from.id(id, { id }) })
 
@@ -47,6 +48,7 @@ export const Person = defineEntity('person', {
   birth: Date,
   notes: String,
   org: String,
+  discord: String,
   referral: Referral, // source OR person
 })
 
@@ -66,21 +68,22 @@ export const Client = defineEntity('client', {
   is: Person,
 })
 
+export const Payment = defineEntity('payment', {
+  id: String, // stripe id
+  by: Client, // or person
+  at: Date,
+  product: Product,
+  status: String,
+  amount: Number, // in cents
+  disputed: Boolean,
+  refunded: Boolean,
+})
+
 export const Visit = defineEntity('visit', {
   id: String,
   at: Date,
   by: Client,
+  payment: Payment,
   end: Date,
   guest: String, // name of the guest
-})
-
-export const Payment = defineEntity('payment', {
-  id: String, // stripe id (empty = cash)
-  by: Client, // or person
-  at: Date,
-  org: String, // DEVAZUKA | 01
-  product: Product,
-  amount: Number, // in cents
-  disputed: Boolean,
-  refunded: Boolean,
 })

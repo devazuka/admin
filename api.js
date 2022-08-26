@@ -20,8 +20,8 @@ export const GET_api_all = async ({ params, session }) =>
   )
 
 // POST /api/person
-export const POST_api_person = async ({ body }) => {
-  const { _id, link, referral, ...data } = await body
+export const POST_api_person = async ({ json }) => {
+  const { _id, link, referral, ...data } = await json
   referral && (data.referral = Referral.get(referral))
   const person = _id ? Person.get(_id).update(data) : Person(data)
   const linked = getById(link)
@@ -49,19 +49,21 @@ export const POST_api_person = async ({ body }) => {
 }
 
 // POST /api/checkin
-export const POST_api_checkin = async ({ body }) => {
-  const { by } = await body
+export const POST_api_checkin = async ({ json }) => {
+  const { by } = await json
+  console.log('check-in person:', by)
   Visit({ at: Date.now(), by: Person.get(by) })
 }
 
 // POST /api/checkout
-export const POST_api_checkout = async ({ body }) => {
-  const { id } = await body
+export const POST_api_checkout = async ({ json }) => {
+  const { id } = await json
+  console.log('check-out visit:', id)
   Visit.get(id).update({ end: Date.now() })
 }
 // POST /api/link/client
-export const POST_api_link_client = async ({ body }) => {
-  const { personId, clientId } = await body
+export const POST_api_link_client = async ({ json }) => {
+  const { personId, clientId } = await json
   const person = Person.get(personId)
   const client = Client.get(clientId)
   client.update({ is: person })
@@ -72,8 +74,8 @@ export const POST_api_link_client = async ({ body }) => {
 }
 
 // POST /api/link/coworker
-export const POST_api_link_coworker = async ({ body }) => {
-  const { personId, coworkerId } = await body
+export const POST_api_link_coworker = async ({ json }) => {
+  const { personId, coworkerId } = await json
   // update matching visits
   const person = Person.get(personId)
   const coworker = Coworker.get(coworkerId)
