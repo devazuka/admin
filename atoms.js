@@ -202,10 +202,13 @@ export const defineEntity = (name, defs) => {
     insertTransaction(t, reason)
     e[UPDATED_AT] = t
     const id = e[ID]
+    const patch = {}
     for (const { k, v } of changes) {
+      patch[k] = v
       insertAtom(id, k, v, t)
       e[k] = parser[k](v)
     }
+    console.log(reason, id, patch)
     return e
   })
 
