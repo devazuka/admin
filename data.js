@@ -79,6 +79,11 @@ export const Payment = defineEntity('payment', {
   refunded: Boolean,
 })
 
+Payment.special = {
+  devazuka: Payment.from.id('devazuka', { product: dayPass, status: 'succeeded'}),
+  '01': Payment.from.id('01', { product: dayPass, status: 'succeeded'}),
+}
+
 export const Visit = defineEntity('visit', {
   id: String,
   at: Date,

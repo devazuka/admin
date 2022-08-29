@@ -1,7 +1,13 @@
 import { createHash } from 'node:crypto'
 
 import { getById } from './atoms.js'
-import { Visit, Payment, Product, Referral, Person, Client, Coworker } from "./data.js"
+import {
+  // tables
+  Visit, Payment, Product, Referral, Person, Client, Coworker,
+
+  // data
+  monthPass, dayPass,
+} from "./data.js"
 import { R } from './response.js'
 
 // GET /api/all
@@ -48,11 +54,30 @@ export const POST_api_person = async ({ json }) => {
   person.update({ image: `https://robohash.org/${hash}` })
 }
 
+const MONTH = 30*24*60*60*1000 // 30 days in ms
+const getLinkedPayment = (p, by) => {
+  // only look at payment made by the visitor
+  if (p.by !== by) return
+
+  // check if active subscription
+  if (p.product === monthPass) return p.at + MONTH < Date.now()
+  if (p.product !== dayPass) return
+
+  // find if the payment can still be used
+  const visits = Visit.filter.payment(p)
+  const uses = p.amount / dayPass.amount
+  return visits.length < uses
+}
+
 // POST /api/checkin
 export const POST_api_checkin = async ({ json }) => {
-  const { by } = await json
-  console.log('check-in person:', by)
-  Visit({ at: Date.now(), by: Person.get(by) })
+  const data = await json
+  const by = Person.get(data.by)
+  const at = Date.now()
+  const payment = data.payment
+    || payment.special[by.org]
+    || Payment.find(getLinkedPayment, by)
+  Visit({ at, by, payment })
 }
 
 // POST /api/checkout
@@ -61,6 +86,7 @@ export const POST_api_checkout = async ({ json }) => {
   console.log('check-out visit:', id)
   Visit.get(id).update({ end: Date.now() })
 }
+
 // POST /api/link/client
 export const POST_api_link_client = async ({ json }) => {
   const { personId, clientId } = await json
