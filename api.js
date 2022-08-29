@@ -75,7 +75,7 @@ export const POST_api_checkin = async ({ json }) => {
   const by = Person.get(data.by)
   const at = Date.now()
   const payment = data.payment
-    || payment.special[by.org]
+    || Payment.special[by.org]
     || Payment.find(getLinkedPayment, by)
   Visit({ at, by, payment })
 }
@@ -85,6 +85,11 @@ export const POST_api_checkout = async ({ json }) => {
   const { id } = await json
   console.log('check-out visit:', id)
   Visit.get(id).update({ end: Date.now() })
+}
+
+// POST /api/buy
+export const POST_api_buy = async ({ json }) => {
+
 }
 
 // POST /api/link/client
