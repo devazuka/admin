@@ -80,8 +80,8 @@ export const Payment = defineEntity('payment', {
 })
 
 Payment.special = {
-  devazuka: Payment.from.id('devazuka', { product: dayPass, status: 'succeeded'}),
-  '01': Payment.from.id('01', { product: dayPass, status: 'succeeded'}),
+  devazuka: Payment.from.id('devazuka', { id: 'devazuka', product: dayPass, status: 'succeeded'}),
+  '01': Payment.from.id('01', { id: '01', product: dayPass, status: 'succeeded'}),
 }
 
 export const Visit = defineEntity('visit', {
