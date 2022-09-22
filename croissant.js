@@ -49,7 +49,12 @@ const refreshToken = async () => {
 // Update every minutes (working hours)
 let limit = 99999
 const formatName = user => `${user.firstName||''} ${user.lastName||''}`.trim().toLowerCase()
-const _id = (entity) => Buffer.from(entity._id, "hex").toString('base64')
+const _id = (entity) => Buffer.from(entity._id, "hex")
+  .toString('base64')
+  .replace(/\+/g, '-')
+  .replace(/\//g, '_')
+  .replace(/\=+$/, '')
+
 const refreshVisits = async () => {
   // TODO: only check when active sessions ?
   const time = new Date()
@@ -58,7 +63,6 @@ const refreshVisits = async () => {
   const now = time.getTime()
   const { visits } = await usages({ limit, skip: 0 })
   limit = 10 // set the limit to 10 for the following calls
-  try {
   for (const visit of visits) {
     const { user } = visit
     await setCroissantRecord(_id(visit), {
@@ -77,9 +81,6 @@ const refreshVisits = async () => {
     }
   }
   console.log('visits refreshed', time)
-} catch (err) {
-  console.log(err)
-}
 }
 
 // refresh token every day
