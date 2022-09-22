@@ -7,6 +7,7 @@ try {
 } catch {}
 
 export const isDev = env.NODE_ENV === 'development'
+export const PASSWORD = env.PASSWORD
 export const DISCORD_SECRET = env.JANUS_SECRET
 export const CROISSANT_SECRET = env.CROISSANT_SECRET
 export const STRIPE_SIGNATURE = env.STRIPE_SIGNATURE

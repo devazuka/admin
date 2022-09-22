@@ -2,8 +2,6 @@ import { readFileSync } from 'node:fs'
 import uWS from 'uws'
 import { R } from './response.js'
 import { isDev, port } from './env.js'
-import * as discordRoutes from './discord.js'
-import * as apiRoutes from './api.js'
 import * as stripeRoutes from './stripe.js'
 import './croissant.js'
 
@@ -129,11 +127,8 @@ const server = uWS.App()
     console.log(ws.id, 'WebSocket closed')
   },
 })
-//.get('/lib/style.css', serveStatic('./lib/style.css'))
-//.get('/lib/script.js', serveStatic('./lib/script.js'))
 
-const routes = { ...discordRoutes, ...apiRoutes, ...stripeRoutes }
-for (const [route, hander] of Object.entries(routes)) {
+for (const [route, hander] of Object.entries(stripeRoutes)) {
   const [method, ...path] = route.toLowerCase().split('_')
   console.log(method.toUpperCase(), `/${path.join('/')}`)
   server[method](`/${path.join('/')}`, handle(hander))

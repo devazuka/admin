@@ -1,5 +1,6 @@
 import { CROISSANT_SECRET } from './env.js'
-import { Coworker, Visit } from './data.js'
+import { intervalRetry } from './interval.js'
+import { setCroissantRecord } from './pb.js'
 
 const api = async (path, { params, headers, ...opts } = {}) => {
   const search = params ? `?${new URLSearchParams(params)}` : ''
@@ -43,58 +44,46 @@ const refreshToken = async () => {
   })
   token = auth.token
   console.log(JSON.parse(Buffer.from(token.split('.')[1], 'base64')))
-
-  // refresh token every day
-  setTimeout(refreshToken, 1 * DAY)
 }
 
 // Update every minutes (working hours)
-let lastUpdate
-const refreshVisits = async (limit = 10) => {
+let limit = 99999
+const formatName = user => `${user.firstName||''} ${user.lastName||''}`.trim().toLowerCase()
+const _id = (entity) => Buffer.from(entity._id, "hex").toString('base64')
+const refreshVisits = async () => {
   // TODO: only check when active sessions ?
   const time = new Date()
   const hours = time.getUTCHours()
   if (hours > 22 || hours < 8) return
   const now = time.getTime()
+  const { visits } = await usages({ limit, skip: 0 })
+  limit = 10 // set the limit to 10 for the following calls
   try {
-    const { visits } = await usages({ limit, skip: 0 })
-    lastUpdate = now
-    for (const visit of visits) {
-      const { user } = visit
-      const at = new Date(visit.begin)
-      const end = visit.end && new Date(visit.end)
-      const updateTime = end?.getTime() || at.getTime()
-      const coworker = Coworker.from.id(user._id, {
-        id: user._id,
-        fullname: `${user.firstName||''} ${user.lastName||''}`.trim().toLowerCase(),
-        image: user.image?.filePath,
-      }, updateTime)
-      const person = coworker.is
-      const by = person || coworker
-      if (coworker.image && person && (!person.image || person.image.startsWith('https://robohash.org/'))) {
-        person.update({ image: coworker.image })
-      }
-      Visit.from.id(visit._id, { id: visit._id, by, at, end })
-      for (const guest of visit.guests) {
-        Visit.from.id(guest._id, {
-          id: guest._id,
-          by,
-          at: new Date(guest.begin),
-          end: guest.end && new Date(guest.end),
-          guest: `${guest.firstName||''} ${guest.lastName||''}`.trim().toLowerCase(),
-        })
-      }
+  for (const visit of visits) {
+    const { user } = visit
+    await setCroissantRecord(_id(visit), {
+      name: formatName(user),
+      at: new Date(visit.begin),
+      until: visit.end ? new Date(visit.end) : null,
+      image: user.image?.filePath,
+      croissant_id: user._id,
+    })
+    for (const guest of visit.guests) {
+      await setCroissantRecord(_id(guest), {
+        name: formatName(guest),
+        at: new Date(guest.begin),
+        until: guest.end ? new Date(guest.end) : null,
+      })
     }
-    console.log('visits refreshed', time)
-  } catch (err) {
-    console.log(err)
-    console.log('unable to refresh visits', time)
   }
-  setTimeout(refreshVisits, 1*MIN)
+  console.log('visits refreshed', time)
+} catch (err) {
+  console.log(err)
+}
 }
 
-// set the initial token
-await refreshToken()
+// refresh token every day
+await intervalRetry(refreshToken, 1 * DAY)
 
 // initial load of all the visits
-await refreshVisits(999999)
+await intervalRetry(refreshVisits, 1 * MIN)
