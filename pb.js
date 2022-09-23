@@ -2,7 +2,7 @@ import PocketBase from 'pocketbase'
 
 import { PASSWORD } from './env.js'
 
-const { admins, records } = new PocketBase('https://book.devazuka.com')
+export const { admins, records } = new PocketBase('https://book.devazuka.com')
 
 const authData = await admins.authViaEmail('server@devazuka.com', PASSWORD)
 
