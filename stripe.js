@@ -6,11 +6,13 @@ import { setStripeRecord, records } from './pb.js'
 const stripe = S(STRIPE_SECRET)
 
 const updateSession = async updates => {
+  console.log('updates:', updates)
   if (!updates) return
   const query = await records.getList('stripe', 1, 1, {
     filter: `stripe_id = '${updates.stripe_id}'`,
   })
   const id = query.items?.[0]?.id
+  console.log('id:', { id })
   id && (await records.update('stripe', id, updates))
 }
 
