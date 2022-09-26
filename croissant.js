@@ -65,13 +65,17 @@ const refreshVisits = async () => {
   limit = 10 // set the limit to 10 for the following calls
   for (const visit of visits) {
     const { user } = visit
-    await setCroissantRecord(_id(visit), {
+    const userVisit = {
       name: formatName(user),
       at: new Date(visit.begin),
-      until: visit.end ? new Date(visit.end) : null,
-      image: user.image?.filePath,
       croissant_id: user._id,
-    })
+    }
+
+    visit.end && (userVisit.until = new Date(visit.end))
+    const image = user.image?.filePath
+    image && (userVisit.image = image)
+
+    await setCroissantRecord(_id(visit), userVisit)
     for (const guest of visit.guests) {
       await setCroissantRecord(_id(guest), {
         name: formatName(guest),
