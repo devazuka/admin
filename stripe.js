@@ -80,7 +80,7 @@ const expand = [
   'subscription',
 ]
 for await (const session of stripe.checkout.sessions.list({
-  limit: 1,
+  limit: 100,
   expand: expand.map(ex => `data.${ex}`),
 })) {
   await processSession(session)
