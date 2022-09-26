@@ -74,13 +74,14 @@ const noEmptyFields = data => {
 
 // TODO: recover latest charge.id from database and use it as `start_after` point
 // to avoid reloading ALL the data everytime, one day™️
+const expand = [
+  'data.line_items',
+  'data.payment_intent',
+  'data.subscription',
+]
 for await (const session of stripe.checkout.sessions.list({
   limit: 100,
-  expand: [
-    'data.line_items',
-    'data.payment_intent',
-    'data.subscription',
-  ],
+  expand,
 })) {
   await processSession(session)
 }
@@ -90,8 +91,12 @@ export const POST_stripe = async ({ body, req }) => {
   const sig = req.getHeader('stripe-signature')
   const event = stripe.webhooks.constructEvent(await body, sig, STRIPE_SIGNATURE)
   if (/^checkout\.session\.[a-z]+$/.test(event.type)) {
-    console.log('handling', event.type)
-    return processSession(event.data.object)
+    console.log('handling', event.type, event.data.object.id)
+    const session = await stripe.checkout.sessions.retrieve(
+      event.data.object.id,
+      { expand },
+    )
+    return processSession(session)
   }
   if (/^customer.subscription\.[a-z]+$/.test(event.type)) {
     console.log('handling', event.type)
