@@ -10,6 +10,7 @@ const authData = await admins.authViaEmail('server@devazuka.com', PASSWORD)
 let cooldown = Promise.resolve()
 const deepEq = (a, b) => {
   if (a === b) return true
+  if (a == null && b == null) return true
   if (!a || !b) return false
   if (Array.isArray(a)) {
     if (!Array.isArray(b)) return false
