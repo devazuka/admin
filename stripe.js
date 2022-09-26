@@ -75,13 +75,13 @@ const noEmptyFields = data => {
 // TODO: recover latest charge.id from database and use it as `start_after` point
 // to avoid reloading ALL the data everytime, one day™️
 const expand = [
-  'data.line_items',
-  'data.payment_intent',
-  'data.subscription',
+  'line_items',
+  'payment_intent',
+  'subscription',
 ]
 for await (const session of stripe.checkout.sessions.list({
-  limit: 100,
-  expand,
+  limit: 1,
+  expand: expand.map(ex => `data.${ex}`),
 })) {
   await processSession(session)
 }
