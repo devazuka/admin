@@ -30,7 +30,7 @@ const setRecord = collection => async (externalId, data) => {
   try {
     await cooldown
     cooldown = new Promise(s => setTimeout(s), 100)
-    const current = await client.records.getOne(collection, id)
+    const current = await records.getOne(collection, id)
     const changes = Object.entries(data)
       .filter(([key, value]) => !deepEq(value, current[key]))
     if (!changes.length) return console.log(`${collection}/${id}:no-changes`)
