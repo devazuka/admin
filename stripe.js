@@ -40,7 +40,10 @@ const processSession = async session => {
     }))
 
     const tax = session.customer_details.tax_ids?.[0]
-    tax && (address.tax = tax)
+    if (tax) {
+      address.taxId = tax.value
+      address.taxType = tax.type
+    }
   }
 
   const details = formatSubscription(session.subscription)
