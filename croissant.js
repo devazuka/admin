@@ -59,10 +59,11 @@ const refreshVisits = async () => {
   // TODO: only check when active sessions ?
   const time = new Date()
   const hours = time.getUTCHours()
-  if (hours > 22 || hours < 8) return
+  console.log({ hours })
+  if (hours > 21 || hours < 7) return
   const now = time.getTime()
   const { visits } = await usages({ limit, skip: 0 })
-  limit = 10 // set the limit to 10 for the following calls
+  limit = 5 // set the limit to 10 for the following calls
   for (const visit of visits) {
     const { user } = visit
     const userVisit = {
