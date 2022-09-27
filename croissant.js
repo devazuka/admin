@@ -59,7 +59,6 @@ const refreshVisits = async () => {
   // TODO: only check when active sessions ?
   const time = new Date()
   const hours = time.getUTCHours()
-  console.log({ hours })
   if (hours > 21 || hours < 7) return
   const now = time.getTime()
   const { visits } = await usages({ limit, skip: 0 })
